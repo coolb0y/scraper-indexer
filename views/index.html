@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Directory Scanner</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 0 8px 2px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  min-width: 626px;
+}
+
+    input[type="text"] {
+      margin-bottom: 10px;
+      padding: 8px;
+      width: 300px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    button[type="submit"] {
+      background-color: #3498db;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin: 5px;
+      min-width: 134px;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #2980b9;
+    }
+
+    #scanResult,
+    #indexResult {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+ 
+  <form id="directoryScannerForm">
+    <h1 style="display:block">Directory Scanner</h1>
+
+    <label for="dirPath" style="font-size:1.2rem !important">Directory Path:</label>
+    <input type="text" id="dirPath" name="dirPath" required>
+    <button type="submit" id="scanBtn" onclick={scanDirectory()}>Scan Directory</button>
+    <div id="scanResult"></div>
+    <button type="submit" id="indexBtn" onclick={indexOpensearch()}>Index to Search</button>
+    <div id="indexResult"></div>
+  </form>
+
+  
+  
+
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script>
+    function scanDirectory() {
+      var dirPath = document.getElementById('dirPath').value;
+      const dirButton = document.getElementById('scanBtn');
+      dirButton.innerText = 'Scanning...';
+
+      axios.get('http://localhost:3333/api/scanDir', {
+        params: { dirPath: dirPath }
+      })
+      .then(function(response) {
+        dirButton.innerText = 'Scanning Done';
+        document.getElementById('scanResult').innerHTML = '<pre>' + `${response.data.message} and Doc Count is ${response.data.doccount}` + '</pre>';
+      })
+      .catch(function(error) {
+        document.getElementById('scanResult').innerHTML = '<p>An error occurred while scanning the directory.</p>';
+      });
+    }
+
+    function indexOpensearch() {
+
+
+      const indexButton = document.getElementById('indexBtn');
+      indexButton.innerText = 'Indexing...';
+
+      axios.get('http://localhost:3333/api/indexOpensearch', {
+  
+      })
+      .then(function(response) {
+        const indexButton = document.getElementById('indexBtn');
+        indexButton.innerText = 'Indexing...';
+        document.getElementById('indexResult').innerHTML = '<pre>' + response.data.message + '</pre>';
+        
+      })
+      .catch(function(error) {
+        document.getElementById('indexResult').innerHTML = '<p>An error occurred while indexing Opensearch.</p>';
+      });
+    }
+
+    document.getElementById('directoryScannerForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const dirPath = document.getElementById('dirPath').value;
+      const scanBtn = document.getElementById('scanBtn');
+      const indexBtn = document.getElementById('indexBtn');
+
+      if (event.target === scanBtn) {
+        scanDirectory(dirPath);
+      } else if (event.target === indexBtn) {
+        indexOpensearch(dirPath);
+      }
+    });
+  </script>
+</body>
+</html>
