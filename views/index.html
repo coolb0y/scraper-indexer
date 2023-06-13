@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Directory Scanner</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 0 8px 2px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  min-width: 626px;
+}
+
+    input[type="text"] {
+      margin-bottom: 10px;
+      padding: 8px;
+      width: 300px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    button[type="submit"] {
+      background-color: #3498db;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin: 5px;
+      min-width: 134px;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #2980b9;
+    }
+
+    #scanResult,
+    #indexResult {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+ 
+  <form id="directoryScannerForm">
+    <h1 style="display:block">Directory Scanner</h1>
+
+    <label for="dirPath" style="font-size:1.2rem !important">Directory Path:</label>
+    <input type="text" id="dirPath" name="dirPath" required>
+    
+    <button type="submit" id="scanBtn" onclick={scanDirectory()}>Scan Directory</button>
+    <div id="scanLive"></div>
+    <div id="scanResult"></div>
+    
+    <button type="submit" id="indexBtn" onclick={indexOpensearch()}>Index to Search</button>
+    <div id="indexLive"></div>
+    <div id="indexResult"></div>
+  </form>
+
+  
+  
+
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script>
+   
+    
+
+    function scanDirectory() {
+      var dirPath = document.getElementById('dirPath').value;
+    
+      const dirButton = document.getElementById('scanBtn');
+      dirButton.innerText = 'Scanning...';
+
+
+      var eventSource1 = new EventSource('http://localhost:3333/api/scandata');
+
+    // Event handler for receiving server-sent events
+      eventSource1.onmessage = function(event) {
+        var data = JSON.parse(event.data);
+        
+        // Process the received data
+        //console.log('Received data:', data);
+        
+        // Update the UI with the received data (example: display in a div)
+        
+        document.getElementById('scanLive').innerHTML= '<p>' +"We have scanned "+ data.filescount + " Files "+ "and " +data.folderscount+" Directory and Subdirectory"+'</p>';
+      };
+
+      // Event handler for handling errors
+      eventSource1.onerror = function(error) {
+        console.error('EventSource error:', error);
+       // Close the connection
+        document.getElementById('scanLive').innerHTML = '<p>OOPS Scanning might be in process but failed to received number of files scanned.</p>';
+        eventSource1.close(); 
+        
+        
+      };
+
+
+
+      axios.get('http://localhost:3333/api/scanDir', {
+        params: { dirPath: dirPath }
+      })
+      .then(function(response) {
+      
+        dirButton.innerText = 'Scanning Done';
+        document.getElementById('scanResult').innerHTML = '<pre>' + `${response.data.message} and Doc Count is ${response.data.doccount}` + '</pre>';
+        setTimeout(function() {
+         eventSource1.close();
+          }, 2000);
+          
+      })
+      .catch(function(error) {
+        console.log(error)
+        document.getElementById('scanResult').innerHTML = '<p>An error occurred while scanning the directory.</p>';
+      });
+    }
+
+    function indexOpensearch() {
+
+
+      const indexButton = document.getElementById('indexBtn');
+      indexButton.innerText = 'Indexing...';
+
+      var eventSource2 = new EventSource('http://localhost:3333/api/indexdata');
+
+    // Event handler for receiving server-sent events
+      eventSource2.onmessage = function(event) {
+        var data = JSON.parse(event.data);
+        
+        // Process the received data
+        //console.log('Received data:', data);
+        
+        // Update the UI with the received data (example: display in a div)
+       // console.log(data,'data')
+        document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + data.indexcount+ " documents"+'</p>';
+      };
+
+      // Event handler for handling errors
+      eventSource2.onerror = function(error) {
+        console.error('EventSource error:', error);
+       // Close the connection
+        document.getElementById('indexLive').innerHTML = '<p>OOPS Scanning might be in process but failed to received number of files scanned.</p>';
+        eventSource2.close(); 
+        
+      };
+
+
+      axios.get('http://localhost:3333/api/indexOpensearch', {
+  
+      })
+      .then(function(response) {
+        const indexButton = document.getElementById('indexBtn');
+        indexButton.innerText = 'Indexed';
+        document.getElementById('indexResult').innerHTML = '<pre>' + response.data.message + '</pre>';
+        
+      })
+      .catch(function(error) {
+        const indexButton = document.getElementById('indexBtn');
+        indexButton.innerText = 'Indexing Failed';
+        document.getElementById('indexResult').innerHTML = '<p>An error occurred while indexing Opensearch.</p>';
+      });
+    }
+
+    document.getElementById('directoryScannerForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const dirPath = document.getElementById('dirPath').value;
+      const scanBtn = document.getElementById('scanBtn');
+      const indexBtn = document.getElementById('indexBtn');
+
+      if (event.target === scanBtn) {
+        scanDirectory(dirPath);
+      } else if (event.target === indexBtn) {
+        indexOpensearch(dirPath);
+      }
+    });
+  </script>
+</body>
+</html>
