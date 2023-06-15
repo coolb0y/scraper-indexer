@@ -55,12 +55,13 @@
     <h1 style="display:block">Directory Scanner & Indexer Tool</h1>
 
     <label for="dirPath" style="font-size:1.2rem !important">Enter Folder Path To Scan</label>
-    <input type="text" id="dirPath" name="dirPath" required>
+    <input type="text" id="dirPath" name="dirPath"  placeholder="Enter Folder Path.." required>
     
     <button type="submit" id="scanBtn" onclick={scanDirectory()}>Start Scanning</button>
     <div id="scanLive"></div>
     <div id="scanResult"></div>
-    <label for="indexing" style="font-size:1.2rem !important">Click Below Button To Start Indexing</label>
+    <label for="indexing" style="font-size:1.2rem !important">Please Enter the Project Name</label>
+    <input type="text" id="indexPath" name="indexPath"   placeholder="Enter Project Name.."  required>
     <button type="submit" id="indexBtn" onclick={indexOpensearch()}>Start Indexing</button>
     <div id="indexLive"></div>
     <div id="indexResult"></div>
@@ -126,7 +127,7 @@
     }
 
     function indexOpensearch() {
-
+      var indexPath = document.getElementById('indexPath').value;
 
       const indexButton = document.getElementById('indexBtn');
       indexButton.innerText = 'Indexing...';
@@ -156,7 +157,7 @@
 
 
       axios.get('http://localhost:3333/api/indexOpensearch', {
-  
+        params: { indexPath: indexPath }
       })
       .then(function(response) {
         const indexButton = document.getElementById('indexBtn');
