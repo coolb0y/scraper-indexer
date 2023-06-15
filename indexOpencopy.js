@@ -91,7 +91,7 @@ function processBatchOfDocuments(cursor) {
 router.get('/', async (req, res) => {
   console.log(req.query);
   const projectname = req.query.indexPath;
-  const destinationPath = `Projects\\${projectname}\\data`
+  const destinationPath = `..\\Projects\\${projectname}\\data`
   indexdataval.noindexed = 0;
   try{
     client = new Client({
