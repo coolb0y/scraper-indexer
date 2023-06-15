@@ -1,7 +1,9 @@
 const router = require('express').Router();
 const { Client } = require('@opensearch-project/opensearch');
-const Data = require('../models/data');
-const copydata = require('../controllers/copydata');
+const Data = require('./models/data');
+
+const {exec} =require("child_process")
+const scriptPath = 'copydata.bat';
 
 const host = 'localhost';
 const protocol = 'http';
@@ -89,6 +91,7 @@ function processBatchOfDocuments(cursor) {
 router.get('/', async (req, res) => {
   console.log(req.query);
   const projectname = req.query.indexPath;
+  const destinationPath = `Projects\\${projectname}\\data`
   indexdataval.noindexed = 0;
   try{
     client = new Client({
@@ -151,9 +154,21 @@ router.get('/', async (req, res) => {
       console.log('Indexing completed');
       // Continue with the rest of the code or return the response
       //add a timer of 10 seconds to wait for the indexing to complete
-    
-      // await copydata(__dirname+"/../opensearch/data",__dirname+ `/../Projects/${projectname}/data`);
-     
+     // console.log(__dirname+"\\..\\opensearch\\data")
+      //await copydata(__dirname+"\\..\\opensearch\\data",__dirname+ `\\..\\Projects\\${projectname}\\data`);
+      exec(`${scriptPath} "${destinationPath}"`, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error executing the script: ${error}`);
+          return res.status(500).json({
+            message: 'Indexing done but Failed to copy folder to project path. Please do it manually'
+          });
+        }
+
+        // console.log(`Script output: ${stdout}`);
+        if (stderr) {
+          console.error(`Script error: ${stderr}`);
+        }
+      });
       return res.status(200).json({
         message: 'Indexing completed',
       });

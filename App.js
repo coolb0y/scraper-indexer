@@ -49,7 +49,7 @@ app.use("/", (req, res, next) => {
 // To make uploads folder publically available with '/api/videos' route
 
 app.use("/api/scanDir",require("./routes/scanLinear"));
-app.use('/api/indexOpensearch',require('./routes/indexOpencopy'));
+app.use('/api/indexOpensearch',require('./indexOpencopy'));
 app.use('/api/home',require('./routes/home'));
 app.use('/api/scandata',require('./routes/scanningdata'));
 app.use('/api/indexdata',require('./routes/indexingdata'));
