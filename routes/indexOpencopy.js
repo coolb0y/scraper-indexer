@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const { Client } = require('@opensearch-project/opensearch');
 const Data = require('../models/data');
-
+const copydata = require('../controllers/copydata');
 
 const host = 'localhost';
 const protocol = 'http';
@@ -88,13 +88,23 @@ function processBatchOfDocuments(cursor) {
 
 router.get('/', async (req, res) => {
   console.log(req.query);
+  const projectname = req.query.indexPath;
   indexdataval.noindexed = 0;
-  client = new Client({
-    node: `${protocol}://${auth}@${host}:${port}`,
-    ssl: {
-      rejectUnauthorized: false, // if you're using self-signed certificates with a hostname mismatch.
-    },
-  });
+  try{
+    client = new Client({
+      node: `${protocol}://${auth}@${host}:${port}`,
+      ssl: {
+        rejectUnauthorized: false, // if you're using self-signed certificates with a hostname mismatch.
+      },
+    });
+  }
+  catch(e){
+    console.log(e);
+    return res.status(500).json({
+      message: 'Failed to connect to opensearch Please check if it is running',
+    });
+  }
+ 
 
   console.log('Creating index:');
 
@@ -137,9 +147,13 @@ router.get('/', async (req, res) => {
 
   const cursor = Data.find({}, { __v: 0, _id: 0 }).select().cursor();
   await processBatchOfDocuments(cursor)
-    .then(() => {
+    .then(async() => {
       console.log('Indexing completed');
       // Continue with the rest of the code or return the response
+      //add a timer of 10 seconds to wait for the indexing to complete
+    
+      // await copydata(__dirname+"/../opensearch/data",__dirname+ `/../Projects/${projectname}/data`);
+     
       return res.status(200).json({
         message: 'Indexing completed',
       });

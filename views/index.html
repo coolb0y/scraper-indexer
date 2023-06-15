@@ -61,8 +61,9 @@
     <div id="scanLive"></div>
     <div id="scanResult"></div>
     <label for="indexing" style="font-size:1.2rem !important">Please Enter the Project Name</label>
-    <input type="text" id="indexPath" name="indexPath"   placeholder="Enter Project Name.."  required>
+    <input type="text" id="projectPath" name="projectName"   placeholder="Enter Project Name.."  required>
     <button type="submit" id="indexBtn" onclick={indexOpensearch()}>Start Indexing</button>
+    <!-- <a href="file://///C:/Users/gameS/OneDrive/Desktop/go-work/Projects">Click to open Project folder</a> -->
     <div id="indexLive"></div>
     <div id="indexResult"></div>
   </form>
@@ -127,7 +128,7 @@
     }
 
     function indexOpensearch() {
-      var indexPath = document.getElementById('indexPath').value;
+      var indexPath = document.getElementById('projectPath').value;
 
       const indexButton = document.getElementById('indexBtn');
       indexButton.innerText = 'Indexing...';
