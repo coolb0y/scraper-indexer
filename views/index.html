@@ -57,14 +57,16 @@
     <label for="dirPath" style="font-size:1.2rem !important">Enter Folder Path To Scan</label>
     <input type="text" id="dirPath" name="dirPath"  placeholder="Enter Folder Path.." required>
     
-    <button type="submit" id="scanBtn" onclick={scanDirectory()}>Start Scanning</button>
-    <div id="scanLive"></div>
-    <div id="scanResult"></div>
+ 
+    
     <label for="indexing" style="font-size:1.2rem !important">Please Enter the Project Name</label>
     <input type="text" id="projectPath" name="projectName"   placeholder="Enter Project Name.."  required>
-    <button type="submit" id="indexBtn" onclick={indexOpensearch()}>Start Indexing</button>
+    <button type="submit" id="scanBtn" onclick={scanDirectory()}>Start Scanning</button>
+    <!-- <button type="submit" id="indexBtn" onclick={indexOpensearch()}>Start Indexing</button> -->
     <!-- <a href="file://///C:/Users/gameS/OneDrive/Desktop/go-work/Projects">Click to open Project folder</a> -->
+    <div id="scanLive"></div>
     <div id="indexLive"></div>
+    <div id="scanResult"></div>
     <div id="indexResult"></div>
   </form>
 
@@ -78,22 +80,17 @@
 
     function scanDirectory() {
       var dirPath = document.getElementById('dirPath').value;
-    
+      var indexPath = document.getElementById('projectPath').value;
+      let tempcount = 0;
       const dirButton = document.getElementById('scanBtn');
       dirButton.innerText = 'Scanning...';
 
 
       var eventSource1 = new EventSource('http://localhost:3333/api/scandata');
 
-    // Event handler for receiving server-sent events
       eventSource1.onmessage = function(event) {
         var data = JSON.parse(event.data);
-        
-        // Process the received data
-        //console.log('Received data:', data);
-        
-        // Update the UI with the received data (example: display in a div)
-        
+        tempcount = data.filescount;
         document.getElementById('scanLive').innerHTML= '<p>' +"We have scanned "+ data.filescount + " Files "+ "and " +data.folderscount+" Directory and Subdirectory"+'</p>';
       };
 
@@ -103,23 +100,51 @@
        // Close the connection
         document.getElementById('scanLive').innerHTML = '<p>OOPS Scanning might be in process but failed to received number of files scanned.</p>';
         eventSource1.close(); 
-        
-        
+
       };
+
+
+          //second event listener for indexing
+          var eventSource2 = new EventSource('http://localhost:3333/api/indexdata');
+          eventSource2.onmessage = function(event) {
+            var data = JSON.parse(event.data);
+            console.log('Received data:', data);
+           if(tempcount !==0 && tempcount>data.indexcount){
+            document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + data.indexcount+ " documents"+'</p>';
+           }
+           else if(tempcount===data.indexcount){
+              document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + data.indexcount+ " documents"+'</p>';
+              eventSource2.close();
+            }
+          
+          };
+
+          eventSource2.onerror = function(error) {
+            console.error('EventSource error:', error);
+          // Close the connection
+            document.getElementById('indexLive').innerHTML = '<p>OOPS Scanning might be in process but failed to received number of files scanned.</p>';
+            eventSource2.close(); 
+            
+          };
 
 
 
       axios.get('http://localhost:3333/api/scanDir', {
-        params: { dirPath: dirPath }
+        params: { dirPath: dirPath,
+        indexPath: indexPath
+        }
       })
       .then(function(response) {
-      
+        let tempcount = response.data.doccount;
         dirButton.innerText = 'Scanning Done';
         document.getElementById('scanResult').innerHTML = '<pre>' + `${response.data.message} and Doc Count is ${response.data.doccount}` + '</pre>';
-        setTimeout(function() {
-         eventSource1.close();
-          }, 2000);
+        // setTimeout(function() {
+        //  eventSource1.close();
+        //   }, 2000);
           
+          //added second event listener 
+      
+
       })
       .catch(function(error) {
         console.log(error)
@@ -127,51 +152,51 @@
       });
     }
 
-    function indexOpensearch() {
-      var indexPath = document.getElementById('projectPath').value;
+    // function indexOpensearch() {
+    //   var indexPath = document.getElementById('projectPath').value;
 
-      const indexButton = document.getElementById('indexBtn');
-      indexButton.innerText = 'Indexing...';
+    //   const indexButton = document.getElementById('indexBtn');
+    //   indexButton.innerText = 'Indexing...';
 
-      var eventSource2 = new EventSource('http://localhost:3333/api/indexdata');
+    //   var eventSource2 = new EventSource('http://localhost:3333/api/indexdata');
 
-    // Event handler for receiving server-sent events
-      eventSource2.onmessage = function(event) {
-        var data = JSON.parse(event.data);
+    //  // Event handler for receiving server-sent events
+    //   eventSource2.onmessage = function(event) {
+    //     var data = JSON.parse(event.data);
         
-        // Process the received data
-        //console.log('Received data:', data);
+    //     // Process the received data
+    //     //console.log('Received data:', data);
         
-        // Update the UI with the received data (example: display in a div)
-       // console.log(data,'data')
-        document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + data.indexcount+ " documents"+'</p>';
-      };
+    //     // Update the UI with the received data (example: display in a div)
+    //    // console.log(data,'data')
+    //     document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + data.indexcount+ " documents"+'</p>';
+    //   };
 
-      // Event handler for handling errors
-      eventSource2.onerror = function(error) {
-        console.error('EventSource error:', error);
-       // Close the connection
-        document.getElementById('indexLive').innerHTML = '<p>OOPS Scanning might be in process but failed to received number of files scanned.</p>';
-        eventSource2.close(); 
+    //   // Event handler for handling errors
+    //   eventSource2.onerror = function(error) {
+    //     console.error('EventSource error:', error);
+    //    // Close the connection
+    //     document.getElementById('indexLive').innerHTML = '<p>OOPS Scanning might be in process but failed to received number of files scanned.</p>';
+    //     eventSource2.close(); 
         
-      };
+    //   };
 
 
-      axios.get('http://localhost:3333/api/indexOpensearch', {
-        params: { indexPath: indexPath }
-      })
-      .then(function(response) {
-        const indexButton = document.getElementById('indexBtn');
-        indexButton.innerText = 'Indexed';
-        document.getElementById('indexResult').innerHTML = '<pre>' + response.data.message + '</pre>';
+    //   axios.get('http://localhost:3333/api/indexOpensearch', {
+    //     params: { indexPath: indexPath }
+    //   })
+    //   .then(function(response) {
+    //     const indexButton = document.getElementById('indexBtn');
+    //     indexButton.innerText = 'Indexed';
+    //     document.getElementById('indexResult').innerHTML = '<pre>' + response.data.message + '</pre>';
         
-      })
-      .catch(function(error) {
-        const indexButton = document.getElementById('indexBtn');
-        indexButton.innerText = 'Indexing Failed';
-        document.getElementById('indexResult').innerHTML = '<p>An error occurred while indexing Opensearch.</p>';
-      });
-    }
+    //   })
+    //   .catch(function(error) {
+    //     const indexButton = document.getElementById('indexBtn');
+    //     indexButton.innerText = 'Indexing Failed';
+    //     document.getElementById('indexResult').innerHTML = '<p>An error occurred while indexing Opensearch.</p>';
+    //   });
+    // }
 
     document.getElementById('directoryScannerForm').addEventListener('submit', function(event) {
       event.preventDefault();
