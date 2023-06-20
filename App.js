@@ -38,7 +38,7 @@ mongoose
     console.log("connected to database");
   });
 
-app.use('/api/images',express.static("./assets"));
+
 
 app.use("/", (req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -48,7 +48,7 @@ app.use("/", (req, res, next) => {
   );
   next();
 });
-// To make uploads folder publically available with '/api/videos' route
+
 
 app.use("/api/scanDir",require("./scanLinear"));
 //app.use('/api/indexOpensearch',require('./indexOpencopy'));
@@ -56,6 +56,7 @@ app.use('/api/home',require('./routes/home'));
 app.use('/api/scandata',require('./routes/scanningdata'));
 app.use('/api/indexdata',require('./routes/indexingdata'));
 app.use('/api/pathexists',require('./routes/checkpath'));
+app.use('/api/projectexists',require('./projectnamecheck'));
 
 //  this api was created for meilisearch indexing not required as of now
 //app.use("/api/indexJson",require("./routes/indexMongo"));

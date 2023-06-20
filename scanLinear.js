@@ -531,7 +531,7 @@ router.get("/", async (req, res) => {
       }
       
       return res.status(200).json({
-            message:"Directory scanned successfully and file names written to json file",
+            message:"Directory scanned and Indexed documents Successful",
             doccount:doccount
     })
 

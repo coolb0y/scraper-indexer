@@ -43,10 +43,29 @@
       background-color: #2980b9;
     }
 
+    .wronginput{
+      border-color: red !important;
+      border-width: 2px !important;
+    }
+
+    .error
+    {
+      animation: shake 0.2s ease-in-out 0s 2 !important;
+      border-width: 2px !important;
+      border-color: red !important;
+      box-shadow: 0 0 8px 2px rgba(255, 0, 0, 0.2) !important;
+    }
     /* button[type="submit"]:disabled {
       background-color: #ccc;
       cursor: not-allowed;
     } */
+
+    @keyframes shake {
+    0% { margin-left: 0rem; }
+    25% { margin-left: 0.5rem; }
+    75% { margin-left: -0.5rem; }
+    100% { margin-left: 0rem; }
+   }
 
     #scanResult,
     #indexResult {
@@ -61,13 +80,14 @@
 
     <label for="dirPath" style="font-size:1.2rem !important">Enter Folder Path To Scan</label>
     <div >
-    <input type="text" id="dirPath" name="dirPath"  placeholder="Enter Folder Path.." required>
-
+    <input type="text" id="dirPath" name="dirPath"  placeholder="Enter Folder Path.."  autocomplete="false" required onkeyup={handleInputChange()}>
+    <span id="dirSpan" style="display: none;color:red">This directory does not exists</span>
     </div>
+
     <label for="indexing" style="font-size:1.2rem !important">Please Enter the Project Name</label>
     <div>
-    <input type="text" id="projectPath" name="projectName"   placeholder="Enter Project Name.."  required>
-    <i class="fa-solid fa-check"></i>
+    <input type="text" id="projectPath" name="projectName"   placeholder="Enter Project Name.." autocomplete="false"  required onkeyup={projecthandleInputChange()}>
+    <span id="projectSpan" style="display: none;color:red">This project already exists</span>
     </div>
 
     <button type="submit" id="scanBtn"  onclick={scanDirectory()}>Start Scanning</button>
@@ -84,8 +104,86 @@
 
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   <script>
+    let timeoutId;
+
+    function handleInputChange() {
+     // console.log('input changed')
    
-    let imagepath = "/api/images/green-tick.jpg";
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(checkpath, 500);
+
+    }
+
+    function checkpath(){
+      var dirPath = document.getElementById('dirPath').value;
+     
+      axios.get("/api/pathexists", {
+        params: { dirPath: dirPath }
+      })
+      .then((res)=>{
+        //console.log(res.data)
+        if(res.data.ans==='true'){
+         // console.log('inside true statement')
+          var element = document.getElementById("dirPath");
+          element.classList.remove("error");
+          var spanelement = document.getElementById("dirSpan");
+          spanelement.style.display = "none";
+        
+        }
+        else if(res.data.ans==='false'){
+          var element = document.getElementById("dirPath");
+          element.classList.add("error");
+          var spanelement = document.getElementById("dirSpan");
+          spanelement.style.display = "block";
+        }
+      
+      })
+      .catch((e)=>{
+        console.log(e)
+      })
+
+    }
+    var timeoutId1;
+    function projecthandleInputChange() {
+     console.log('project input changed')
+    clearTimeout(timeoutId1);
+    timeoutId1 = setTimeout(checkproject, 500);
+
+    }
+
+    function checkproject(){
+      var projectPath = document.getElementById('projectPath').value;
+     
+      axios.get("/api/projectexists", {
+        params: { projectPath: projectPath }
+      })
+      .then((res)=>{
+        console.log(res.data)
+        
+        if(res.data.ans==='true'){
+         // console.log('inside true statement')
+          var element = document.getElementById("projectPath");
+          element.classList.add("error");
+          var spanele = document.getElementById("projectSpan");
+          spanele.style.display = "block";
+         
+        }
+        else if(res.data.ans==='false'){
+          var element = document.getElementById("projectPath");
+          element.classList.remove("error");
+          var spanele = document.getElementById("projectSpan");
+          spanele.style.display = "none";
+        }
+      
+      })
+      .catch((e)=>{
+        console.log(e)
+      })
+
+    }
+
+
+
 
     function scanDirectory() {
       var dirPath = document.getElementById('dirPath').value;
@@ -117,7 +215,7 @@
           var eventSource2 = new EventSource('http://localhost:3333/api/indexdata');
           eventSource2.onmessage = function(event) {
             var data = JSON.parse(event.data);
-            console.log('Received data:', data);
+           // console.log('Received data:', data);
            if(tempcount !==0 && tempcount>data.indexcount && data.indexcount!==0){
             document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + data.indexcount+ " documents"+'</p>';
            }
@@ -146,7 +244,7 @@
       .then(function(response) {
         let tempcount = response.data.doccount;
         dirButton.innerText = 'Scanning Done';
-        document.getElementById('scanResult').innerHTML = '<pre>' + `${response.data.message} and Doc Count is ${response.data.doccount}` + '</pre>';
+        document.getElementById('scanResult').innerHTML = '<pre>' + `${response.data.message} and ${response.data.doccount} Document indexed` + '</pre>';
         // setTimeout(function() {
         //  eventSource1.close();
         //   }, 2000);
@@ -161,51 +259,6 @@
       });
     }
 
-    // function indexOpensearch() {
-    //   var indexPath = document.getElementById('projectPath').value;
-
-    //   const indexButton = document.getElementById('indexBtn');
-    //   indexButton.innerText = 'Indexing...';
-
-    //   var eventSource2 = new EventSource('http://localhost:3333/api/indexdata');
-
-    //  // Event handler for receiving server-sent events
-    //   eventSource2.onmessage = function(event) {
-    //     var data = JSON.parse(event.data);
-        
-    //     // Process the received data
-    //     //console.log('Received data:', data);
-        
-    //     // Update the UI with the received data (example: display in a div)
-    //    // console.log(data,'data')
-    //     document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + data.indexcount+ " documents"+'</p>';
-    //   };
-
-    //   // Event handler for handling errors
-    //   eventSource2.onerror = function(error) {
-    //     console.error('EventSource error:', error);
-    //    // Close the connection
-    //     document.getElementById('indexLive').innerHTML = '<p>OOPS Scanning might be in process but failed to received number of files scanned.</p>';
-    //     eventSource2.close(); 
-        
-    //   };
-
-
-    //   axios.get('http://localhost:3333/api/indexOpensearch', {
-    //     params: { indexPath: indexPath }
-    //   })
-    //   .then(function(response) {
-    //     const indexButton = document.getElementById('indexBtn');
-    //     indexButton.innerText = 'Indexed';
-    //     document.getElementById('indexResult').innerHTML = '<pre>' + response.data.message + '</pre>';
-        
-    //   })
-    //   .catch(function(error) {
-    //     const indexButton = document.getElementById('indexBtn');
-    //     indexButton.innerText = 'Indexing Failed';
-    //     document.getElementById('indexResult').innerHTML = '<p>An error occurred while indexing Opensearch.</p>';
-    //   });
-    // }
 
     document.getElementById('directoryScannerForm').addEventListener('submit', function(event) {
       event.preventDefault();
