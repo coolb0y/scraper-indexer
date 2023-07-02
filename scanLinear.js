@@ -158,9 +158,9 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                           
                           id:id,
                           title:title,
-                          fileName: fileName,
-                          fileType: "html",
-                          fileSize:filesize,
+                          filename: fileName,
+                          filetype: "html",
+                          filesize:filesize,
                           url:url,
                           
                           filedetails: cleanedText,
@@ -229,9 +229,9 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                       const data = new Data({
                         id:id,
                           title:imgtitle,
-                          fileName: fileName,
-                          fileType: "image",
-                          fileSize:filesize,
+                          filename: fileName,
+                          filetype: "image",
+                          filesize:filesize,
                           url:url,
                           filedetails: imageDescription,
                           length:imageLength,
@@ -312,12 +312,12 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                           const data = new Data({
                             id:id,
                               title:title,
-                              fileName: fileName,
+                              filename: fileName,
                               artist:artist,
                               album:album,
                               track:track,
-                              fileType: "video",  
-                              fileSize:filesize,
+                              filetype: "video",  
+                              filesize:filesize,
                               url:url,
                               codec:codec,
                               duration:duration,
@@ -364,9 +364,9 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                      const datavl = new Data({
                       id:id,
                       title:title,
-                      fileName: fileName,
-                      fileType: "pdf",
-                      fileSize:filesize,
+                      filename: fileName,
+                      filetype: "pdf",
+                      filesize:filesize,
                       url:url,
                       filedetails: cleanedData,
                       baseurl:baseurl,
@@ -405,9 +405,9 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                        const dataval = new Data({
                         id:id,
                           title:title,
-                          fileName: fileName,
-                          fileType: "text",
-                          fileSize:filesize,
+                          filename: fileName,
+                          filetype: "text",
+                          filesize:filesize,
                           url:url,
                           filedetails: cleanedData,
                           baseurl:baseurl,
@@ -416,7 +416,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
       
                        try{
                         console.log(data.filedetails)
-                       dataval.save().then((data)=>{
+                        dataval.save().then((data)=>{
                         scandataval.nofiles=scandataval.nofiles+1;
                         doccount++;
                        }).catch((e)=>console.log(e))
@@ -455,9 +455,9 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                           const data = new Data({
                                id:id,
                               title:title,
-                              fileName: fileName,
-                              fileType: "doc-docx",
-                              fileSize:filesize,
+                              filename: fileName,
+                              filetype: "doc-docx",
+                              filesize:filesize,
                               url:url,
                               filedetails: cleanedData,
                               baseurl:baseurl,

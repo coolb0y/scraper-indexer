@@ -14,7 +14,7 @@ router.get('/', (req, res) => {
         // Send a sample event every second
         const dataInterval = setInterval(() => {
             const indexcount = indexdataval.noindexed;
-
+            console.log(indexcount,'indexcount');
           res.write(`data: ${JSON.stringify({indexcount})}\n\n`);
         }, 200);
       
