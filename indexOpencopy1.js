@@ -34,8 +34,13 @@ async function deleteAndCreateIndex() {
   
 
   try{
-    await client.indices.delete({ index: indexName });
-    console.log('Index deleted successfully');
+
+    const ifExists = await client.indices.exists({ index: indexName });
+    if (ifExists && ifExists.body) {
+      await client.indices.delete({ index: indexName });
+      console.log('Index deleted successfully');
+    }
+
    const response = await client.indices.create({
     index: indexName,
     body: {
