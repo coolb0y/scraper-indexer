@@ -3,7 +3,7 @@ const router = require('express').Router();
 const { exec } = require('child_process');
 const path = require('path');
 
-const scriptPath = path.join(__dirname, "folderexist.bat");
+const scriptPath = 'folderexist.bat'
 
 
 async function checkFolderExists(folderPath) {
