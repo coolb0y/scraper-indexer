@@ -13,10 +13,10 @@ router.get('/', (req, res) => {
       
         // Send a sample event every second
         const dataInterval = setInterval(() => {
-            let indexcount = indexdataval.noindexed;
+            const indexcount = indexdataval.noindexed;
 
           res.write(`data: ${JSON.stringify({indexcount})}\n\n`);
-        }, 50);
+        }, 200);
       
         // Close the server-sent event connection on client request
         req.on('close', () => {

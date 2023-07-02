@@ -214,13 +214,13 @@
           //second event listener for indexing
           var eventSource2 = new EventSource('http://localhost:3333/api/indexdata');
           eventSource2.onmessage = function(event) {
-            var data = JSON.parse(event.data);
-           // console.log('Received data:', data);
-           if(tempcount !==0 && tempcount>data.indexcount && data.indexcount!==0){
-            document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + data.indexcount+ " documents"+'</p>';
+            var data1 = JSON.parse(event.data);
+            console.log('Received data:', data1.indexcount);
+           if(tempcount !==0 && tempcount>data1.indexcount && data1.indexcount!==0){
+            document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + data1.indexcount+ " documents"+'</p>';
            }
-           else if(tempcount===data.indexcount){
-              document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + data.indexcount+ " documents"+'</p>';
+           else if(tempcount===data1.indexcount){
+              document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + data1.indexcount+ " documents"+'</p>';
               eventSource2.close();
             }
           
