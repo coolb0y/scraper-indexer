@@ -15,6 +15,12 @@ console.log("process.env.MONGODB_URI", process.env.MONGODB_URI);
 // So, we attach headers from servers to client to tell browser that it's OK
 app.use(cors());
 
+const path = require('path');
+path.join(__dirname, `./node_modules/pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js`);
+path.join(__dirname, `./node_modules/pdf-parse/lib/pdf.js/v1.10.100/build/pdf.worker.js`);
+path.join(__dirname, `./node_modules/pdf-parse/lib/pdf.js/v1.10.100/build/pdf.worker.js.map`);
+path.join(__dirname, `./node_modules/pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js.map`);
+
 global.scandataval = {
   nofiles:0,
   nofolders:0,

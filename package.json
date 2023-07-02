@@ -22,7 +22,9 @@
     "word-extractor": "^1.0.4"
   },
   "pkg": {
-    "scripts": [],
+    "scripts": [
+        "node_modules/pdf-parse/lib/**/*.js"
+    ],
     "assets": [
       "views/index.html"
     ],
