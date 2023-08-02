@@ -8,7 +8,7 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 // Used to log everything like GET, POST, etc requests
 app.use(morgan("dev"));
-console.log("process.env.MONGODB_URI", process.env.MONGODB_URI);
+//console.log("process.env.MONGODB_URI", process.env.MONGODB_URI);
 // It ensures that we prevent Cross-Origin Resource Sharing(CORS) errors
 // If client made req on localhost:4000, and received res from server which
 // has localhost:3000 req will fail. It is always the case with RESTful APIs

@@ -99,7 +99,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
           await Promise.all(
               files.map(async function (file) {
           
-              console.log(file,'file');
+             // console.log(file,'file');
                 let filePath = path.join(currentPath, file);
                 let stats = fs.statSync(filePath);
                 if (stats.isDirectory()) {
@@ -117,12 +117,12 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                   let id = uuidv4();
                  
                   
-                  console.log(filePath,'filepath');
+                  //console.log(filePath,'filepath');
                   const index = filePath.indexOf(lastdirname);
-                  console.log(index,'index');
+                  //console.log(index,'index');
                   const hostname = filePath.slice(index + dirlength+1).split('\\')[0];
                   baseurl = "http://"+hostname;
-                  console.log(hostname,baseurl,'hostname','baseurl')
+                  //console.log(hostname,baseurl,'hostname','baseurl')
                  
                   const startIndex = filePath.indexOf(hostname) + hostname.length;
                   const pathAfterDomain = filePath.substring(startIndex).replace(/\\/g, '/');
@@ -168,7 +168,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                       })
       
                       try{
-                        console.log(data.filedetails)
+                       // console.log(data.filedetails)
                           await data.save();
                           scandataval.nofiles=scandataval.nofiles+1;
                           doccount++;
@@ -203,21 +203,22 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                       //console.log(result);
                        let imgtitle="";
                       let imgtags="";
-                      let imageWidth= result?result.ImageWidth?result.ImageWidth.value:0:0;
-                      let imageLength=result?result.ImageLength?result.ImageLength.value:0:0;
+                      // console.log(result,'image result');
+                      let imageWidth= result?result["Image Width"]?result["Image Width"].value:0:0;
+                      let imageLength=result?result["Image Height"]?result["Image Height"].value:0:0;
                       let imageDescription="";
       
                       if(result){
-                        if(result.ImageDescription){
+                        if(result.ImageDescription && result.ImageDescription.description){
                          
-                          imageDescription =result.ImageDescription.value.toString('utf16le').replace(/[\n\/\\><-]+|\s+/g, ' ');
+                          imageDescription =result.ImageDescription.description.replace(/[\n\/\\><-]+|\s+/g, ' ');
                         }
       
-                        if(result.title){
+                        if(result.title && result.title.description){
                          
                           imgtitle = result.title.description.replace(/[\n\/\\><-]+|\s+/g, ' ');
                         }
-                       if(result.subject){
+                       if(result.subject && result.title.description){
                        
                         imgtags = result.subject.description.replace(/[\n\/\\><-]+|\s+/g, ' ');
                        }
@@ -242,7 +243,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                       })
       
                       try{
-                        console.log(data.filedetails)
+                       // console.log(data.filedetails)
                           await data.save();
                           scandataval.nofiles=scandataval.nofiles+1;
                           doccount++;
@@ -284,7 +285,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                       var process = new ffmpeg(filePath);
                       process.then(async function (video) {
                         // Video metadata
-                       console.log(video.metadata);
+                       //console.log(video.metadata);
                         // FFmpeg configuration
                        
                         let title="";
@@ -328,7 +329,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                           });
       
                           try{
-                            console.log(data.filedetails)
+                            // console.log(data.filedetails)
                               await data.save();
                               scandataval.nofiles=scandataval.nofiles+1;
                               doccount++;
@@ -374,7 +375,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                      })
       
                      try{
-                      console.log(data.filedetails)
+                     // console.log(data.filedetails)
                       await datavl.save();
                       scandataval.nofiles=scandataval.nofiles+1;
                       doccount++;
@@ -415,7 +416,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                        })
       
                        try{
-                        console.log(data.filedetails)
+                        //console.log(data.filedetails)
                         dataval.save().then((data)=>{
                         scandataval.nofiles=scandataval.nofiles+1;
                         doccount++;
@@ -465,7 +466,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                           })
       
                           try{
-                            console.log(data.fileDetails)
+                           // console.log(data.fileDetails)
                               await data.save();
                               scandataval.nofiles=scandataval.nofiles+1;
                               doccount++;
