@@ -14,7 +14,7 @@ const {
 const cheerio = require('cheerio');
 const WordExtractor = require("word-extractor"); 
 
-const ExifParser = require('exif-parser');
+// const ExifParser = require('exif-parser');
 const ExifReader = require('exifreader');
 var ffmpeg = require('ffmpeg');
 const Data = require("./models/data");
@@ -357,11 +357,33 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                     try{
                       let dataBuffer = fs.readFileSync(filePath);
                       const data = await pdf(dataBuffer)
-                      let cleanedData = data.text.replace(/[\n\/\\><-]+|\s+/g, ' ');
-                      //console.log(cleanedData);
                       let title="";
-                      //const dataobj ={id:id,title:title, fileName: fileName, filetype: filetype,fileSize:filesize,url:url, fileDetails: cleanedData };
                      
+                     
+                    
+                      const titletemp = data.info.Title;
+                     
+
+                      let cleanedData = data.text.replace(/[\n\/\\><-]+|\s+/g, ' ');
+                      if(titletemp && titletemp!=="Untitled"){
+                        title = titletemp;
+                      }
+                      else{
+                        const firstLineRegex = /^(?!\\{0,2}n$|\\{1,2}n$).+$/m;
+                        const matches = data.text.match(firstLineRegex);
+                        const firstLine = matches ? matches[0].trim() : null;
+  
+                      
+                         if(firstLine){
+                          title = firstLine;
+                         }
+                         else{
+                        
+                           title = firstLine?firstLine:cleanedData.substring(0, 30);
+                         }
+                         
+                      }
+                    
                      const datavl = new Data({
                       id:id,
                       title:title,
