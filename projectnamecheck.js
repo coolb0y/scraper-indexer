@@ -2,8 +2,8 @@
 const router = require('express').Router();
 const { exec } = require('child_process');
 const path = require('path');
-
-const scriptPath = 'folderexist.bat'
+const logger = require('./logger');
+const scriptPath = 'folderexist.bat';
 
 
 async function checkFolderExists(folderPath) {
@@ -12,12 +12,17 @@ async function checkFolderExists(folderPath) {
       exec(`${scriptPath} "${folderPath}"`, (error, stdout, stderr) => {
         if (error) {
           // An error occurred while executing the script
-          console.error(`exec error: ${error}`);
+          logger.error("Error executing batch script. We are not able to find if folder exists")
+          //console.error(`exec error: ${error}`);
+          const jsonError = JSON.stringify(error);
+          logger.debug(jsonError);
+          
           reject(error);
         } else {
 
           // Check if the output contains the folder name
-          console.log('folder exists')
+          logger.info("Batch script executed successfully to finder folder exits. Result: Folder exists");
+          //console.log('folder exists')
           const folderExists = stdout.includes("ankur1455h5j44h34");
          
           resolve(folderExists);
@@ -35,12 +40,15 @@ router.get('/',async (req,res)=>{
    await checkFolderExists(finalPath)
       .then((folderExists) => {
         if (folderExists) {
-          console.log(`Folder "${finalPath}" exists.`);
+          logger.info(`Folder ${finalPath} exists`);
+          
+         // console.log(`Folder "${finalPath}" exists.`);
           return res.status(200).json({
             ans: 'true'
           })
         } else {
-            console.log(`Folder "${finalPath}" does not exist.`)
+            logger.info(`Folder "${finalPath}" does not exist`);
+            //console.log(`Folder "${finalPath}" does not exist.`)
             return res.status(200).json({
                 ans: 'false'
             })
@@ -48,7 +56,10 @@ router.get('/',async (req,res)=>{
         }
       })
       .catch((error) => {
-        console.error('An error occurred:', error);
+        logger.error("An error has occured in checking if Folder exits. Ignoring error Process will continue..");
+        const jsonError = JSON.stringify(error);
+        logger.debug(jsonError);
+       // console.error('An error occurred:', error);
         return res.status(500).json({
             ans: 'false'
         })

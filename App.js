@@ -6,6 +6,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
 require("dotenv").config();
+const logger = require("./logger");
 // Used to log everything like GET, POST, etc requests
 app.use(morgan("dev"));
 //console.log("process.env.MONGODB_URI", process.env.MONGODB_URI);
@@ -29,6 +30,12 @@ global.scandataval = {
 global.indexdataval = {
   noindexed:0
 };
+
+const apilogging = (req, res, next) => {
+  const apiRoute = req.originalUrl; // Get the full URL
+  logger.info(`Request received for ${apiRoute}`);
+  next();
+};
 // extended: true allows to parse extended body with rich data in it
 // We will use false only allows simple bodies for urlencoded data
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -41,8 +48,10 @@ mongoose
     useUnifiedTopology: true,
   })
   .then((res) => {
-    console.log("connected to database");
-  });
+    logger.info("Connected to Database")
+    
+  })
+  
 
 
 
@@ -56,16 +65,12 @@ app.use("/", (req, res, next) => {
 });
 
 
-app.use("/api/scanDir",require("./scanLinear"));
-//app.use('/api/indexOpensearch',require('./indexOpencopy'));
-app.use('/api/home',require('./routes/home'));
-app.use('/api/scandata',require('./routes/scanningdata'));
-app.use('/api/indexdata',require('./routes/indexingdata'));
-app.use('/api/pathexists',require('./routes/checkpath'));
-app.use('/api/projectexists',require('./projectnamecheck'));
+app.use("/api/scanDir",apilogging,require("./scanLinear"));
+app.use('/api/home',apilogging,require('./routes/home'));
+app.use('/api/scandata',apilogging,require('./routes/scanningdata'));
+app.use('/api/indexdata',apilogging,require('./routes/indexingdata'));
+app.use('/api/pathexists',apilogging,require('./routes/checkpath'));
+app.use('/api/projectexists',apilogging,require('./projectnamecheck'));
 
-//  this api was created for meilisearch indexing not required as of now
-//app.use("/api/indexJson",require("./routes/indexMongo"));
-// Routes
 
 module.exports = app;

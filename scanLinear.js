@@ -18,7 +18,8 @@ const WordExtractor = require("word-extractor");
 const ExifReader = require('exifreader');
 var ffmpeg = require('ffmpeg');
 const Data = require("./models/data");
-const indexandcopy = require("./indexOpencopy1");
+const indexandcopy = require("./indexOpencopy");
+const logger  = require('./logger');
 // Read Word document
 
 let doccount = 0;
@@ -94,7 +95,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
     while(stack.length) {
         try {
             const currentPath = stack.pop();
-             
+             logger.info(`Scanning ${currentPath}`);
              const files = fs.readdirSync(currentPath);
           await Promise.all(
               files.map(async function (file) {
@@ -103,10 +104,11 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                 let filePath = path.join(currentPath, file);
                 let stats = fs.statSync(filePath);
                 if (stats.isDirectory()) {
-                  
+                  logger.debug(`${filePath} found`);
                   scandataval.nofolders=scandataval.nofolders+1;
                  
                     stack.push(filePath);
+                    logger.debug(`${filePath} is added to queue`);
                 } else {
                   // Handle file here
                   
@@ -116,7 +118,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                   let filesize= stats.size;
                   let id = uuidv4();
                  
-                  
+                  logger.info(`${filePath} is being scanned`);
                   //console.log(filePath,'filepath');
                   const index = filePath.indexOf(lastdirname);
                   //console.log(index,'index');
@@ -131,10 +133,13 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                  
                   try {
                     filetype = mime.lookup(filePath);
-                    
+                    logger.debug(`We have figured filetype as: ${filetype}`);
                    
                   } catch (err) {
-                      console.log(err);
+                   
+                      logger.error(`Not able to find the file type of ${filetype}. Scanning will progress`);
+                      const jsonError = JSON.stringify(err);
+                      logger.debug(`The below error took place" :- ${jsonError}`);
                     
                   }
         
@@ -168,22 +173,30 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                       })
       
                       try{
-                       // console.log(data.filedetails)
+                         
                           await data.save();
                           scandataval.nofiles=scandataval.nofiles+1;
                           doccount++;
-                         
+                          logger.info(`${filePath} scanned and saved to database`);
+                          logger.debug(`Number of Document scanned are ${doccount}`);
                           
                       }
                       catch(err){
-                          console.log(err);
+                      
+                          logger.error(`Failed to save data to databse ${filePath}. Skipping file. Scanning will continue`);
+                          const jsonError = JSON.stringify(err);
+                          logger.debug(jsonError);
+                          
                           
                       }
       
-                      //fileNames.push({id:id,title:title, fileName: fileName, fileType: "html",fileSize:filesize,url:url, fileDetails: cleanedText });
+                     } catch (err) {
+                    
+                      logger.error(`Failed to read HTML file ${filePath}. Skipping file. Scanning will continue`);
+                      const jsonError = JSON.stringify(err);
+                      logger.debug(jsonError);
                       
-                    } catch (err) {
-                      console.error('Failed to read HTML file:', err);
+
                       
                       
                     }
@@ -192,18 +205,14 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                    
                     // this code works as well it is able to extract metadata height and stuff as well as advance things
                     try{
-                      // const imageBuffer = fs.readFileSync(filePath);
+                    
       
-                      // // Create ExifParser instance and parse image buffer
-                      // const parser = ExifParser.create(imageBuffer);
-                      // const result = parser.parse();
-                      // //console.log(result,'result');
+                    
                     const imageBuffer = fs.readFileSync(filePath)
                       const result =  ExifReader.load(imageBuffer);
-                      //console.log(result);
-                       let imgtitle="";
+                    
+                      let imgtitle="";
                       let imgtags="";
-                      // console.log(result,'image result');
                       let imageWidth= result?result["Image Width"]?result["Image Width"].value:0:0;
                       let imageLength=result?result["Image Height"]?result["Image Height"].value:0:0;
                       let imageDescription="";
@@ -247,46 +256,40 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                           await data.save();
                           scandataval.nofiles=scandataval.nofiles+1;
                           doccount++;
-                        
+                          logger.info(`${filePath} scanned and saved to database`);
+                          logger.debug(`Number of Document scanned are ${doccount}`);
                           
                       }
-                      catch(e){
-                          console.log(e);
+                       catch(e){
+                          // console.log(e);
+                          logger.error(`Failed to save data to databse ${filePath}. Skipping file. Scanning will continue`);
+                          const jsonError = JSON.stringify(e);
+                          logger.debug(`Error:- ${jsonError}`);
                           
-                      }
+                        }
                      
-                       //fileNames.push({id:id,title:imgtitle, fileName: fileName, fileType: "image",fileSize:filesize,url:url, fileDetails: imageDescription,imagesize:{imageLength,imageWidth},imgtags:imgtags })
                        
-                    }
+                      }
       
-                    catch(e){
-                      console.log(e);
-                    
+                     catch(e){
+                      //console.log(e);
+                      logger.error(`Failed to scan file data ${filePath}`);
+                      const jsonError = JSON.stringify(e);
+                      logger.debug(jsonError);
+                      
+                      
                       
                     }
                       
             
                   }
       
-                  // else if(filetype==="image/gif"){
-                  //   try{
-                                
-                  
-      
-                  //   }
-                  // catch(e){
-                  //   console.log(e);
-                  //   throw new Error("Something went wrong with image");
-                  // }
-                  // }
       
                   else if(filetype=="video/x-matroska"){
                     try {
                       var process = new ffmpeg(filePath);
                       process.then(async function (video) {
                         // Video metadata
-                       //console.log(video.metadata);
-                        // FFmpeg configuration
                        
                         let title="";
                         let artist="";
@@ -333,23 +336,32 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                               await data.save();
                               scandataval.nofiles=scandataval.nofiles+1;
                               doccount++;
+                             logger.info(`${filePath} File scanned and data saved successfully to database`)
                               
                               
                           }
                           catch(e){
-                              console.log(e);
-                            
+                              
+                              logger.error(`Failed to save data to databse ${filePath}. Skipping file. Scanning will continue`);
+                              const jsonError = JSON.stringify(e);
+                              logger.debug(jsonError);
                           }
                         
                          // fileNames.push({id:id,title:title, fileName: fileName,artist:artist,album:album,track:track, fileType: "video",fileSize:filesize,url:url, codec:codec,duration:duration,bitrate:bitrate,resoultion:resoultion,fps:fps,audiocodec:audiocodec,audiochannels:audiochannels,audiobitrate:audiobitrate,audiosamplerate:audiosamplerate });
                        }
-                      }, function (err) {
-                        console.log('Error: ' + err);
-                        
+                       }, function (err) {
+                       
+                        logger.error(`Failed to scan file data ${filePath}`);
+                        const jsonError = JSON.stringify(err);
+                        logger.debug(jsonError);
+
                       });
                     } catch (e) {
-                      console.log(e);
-                      
+                    
+                      logger.error(`Failed to scan file data ${filePath}`);
+                      const jsonError = JSON.stringify(e);
+                      logger.debug(jsonError);
+
                      
                     }
                   }
@@ -401,68 +413,72 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                       await datavl.save();
                       scandataval.nofiles=scandataval.nofiles+1;
                       doccount++;
+                      logger.info(`${filePath} scanned and saved to database`);
+                      logger.debug(`Number of Document scanned are ${doccount}`);
                      
                       
                       }
                       catch(e){
-                      console.log(e);
+                        logger.error(`Failed to save data to databse ${filePath}. Skipping file. Scanning will continue`);
+                        const jsonError = JSON.stringify(e);
+                        logger.debug(jsonError);
                       
                    }
                      // fileNames.push({id:id,title:title, fileName: fileName, filetype: "pdf",fileSize:filesize,url:url, fileDetails: cleanedData }); 
                   
                     }
                     catch(e){
-                      console.log(e);
-                      
+               
+                      logger.error(`Failed to scan file data ${filePath}`);
+                      const jsonError = JSON.stringify(e);
+                      logger.debug(jsonError);
+
                      
                     }
                   }
                    else if (filetype === "text/plain") {
-                  try{
-                    fs.readFile(filePath, 'utf8',function (err, data) {
-                      if (err) throw err;
-                      else{
-                        let cleanedData = data.replace(/[\n\/\\><-]+|\s+/g, ' ');
-                        let title = cleanedData.substring(0, 30);
-                       
-                       const dataval = new Data({
-                        id:id,
-                          title:title,
-                          filename: fileName,
-                          filetype: "text",
-                          filesize:filesize,
-                          url:url,
-                          filedetails: cleanedData,
-                          baseurl:baseurl,
-      
-                       })
-      
-                       try{
-                        //console.log(data.filedetails)
-                        dataval.save().then((data)=>{
-                        scandataval.nofiles=scandataval.nofiles+1;
-                        doccount++;
-                       }).catch((e)=>console.log(e))
-                       
-                        
-                      }
-                      catch(e){
-                          console.log(e);
-                        
-                      }
-                       // fileNames.push({id:id,title:title, fileName: fileName, filetype: "text",fileSize:filesize,url:url, fileDetails: cleanedData });
-                       // console.log(data);
-                      }
-                      
-                    });  
-                  }
-      
-                  catch(e){
-                    console.log(e);
+                    if (filetype === "text/plain") {
+                      fs.readFile(filePath, 'utf8', function (err, data) {
+                        if (err) {
+                          logger.error(`Failed to read file data ${filePath}`);
+                          const jsonError = JSON.stringify(err);
+                          logger.debug(jsonError);
+                        } else {
+                          try {
+                            let cleanedData = data.replace(/[\n\/\\><-]+|\s+/g, ' ');
+                            let title = cleanedData.substring(0, 30);
                     
+                            const dataval = new Data({
+                              id: id,
+                              title: title,
+                              filename: fileName,
+                              filetype: "text",
+                              filesize: filesize,
+                              url: url,
+                              filedetails: cleanedData,
+                              baseurl: baseurl,
+                            });
                     
-                  }
-                 
+                            dataval.save()
+                              .then((data) => {
+                                scandataval.nofiles = scandataval.nofiles + 1;
+                                doccount++;
+                                logger.info(`${filePath} scanned and saved to the database`);
+                                logger.debug(`Number of Documents scanned is ${doccount}`);
+                              })
+                              .catch((e) => {
+                                logger.error(`Failed to save data to the database ${filePath}. Skipping file. Scanning will continue`);
+                                const jsonError = JSON.stringify(e);
+                                logger.debug(jsonError);
+                              });
+                          } catch (e) {
+                            logger.error(`Failed to clean data of the file ${filePath}. Skipping file. Scanning will continue`);
+                            const jsonError = JSON.stringify(e);
+                            logger.debug(`Error:- ${jsonError}`);
+                          }
+                        }
+                      });
+                    }
                   }
                    else if (filetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || filetype === "application/msword") {
                    
@@ -492,19 +508,25 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                               await data.save();
                               scandataval.nofiles=scandataval.nofiles+1;
                               doccount++;
-                              
+                              logger.info(`${filePath} scanned and saved to database`);
+                              logger.debug(`Number of Document scanned are ${doccount}`);
                           }
                           catch(e){
-                              console.log(e);
-                            
+                             // console.log(e);
+                             logger.error(`Failed to save data to databse ${filePath}. Skipping file. Scanning will continue`);
+                             const jsonError = JSON.stringify(e);
+                             logger.debug(`Error:- ${jsonError}`);
+                             
                           }
-                          //fileNames.push({id:id,title:title, fileName: fileName, filetype: "doc-docx",fileSize:filesize,url:url, fileDetails: cleanedData });
                          
                         })
                         
                     }
                     catch(e){
-                      console.log(e);
+                      logger.error(`Failed to scan file data ${filePath}`);
+                      const jsonError = JSON.stringify(e);
+                      logger.debug(`Error:- ${jsonError}`);
+
                       
                      
                     }
@@ -518,8 +540,10 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
       
           
           } catch (err) {
-            console.error('Failed to read directory:', err);
-        
+            logger.error(`Promise to scan all files of ${dirPath} Failed. Most of files might have scanned successfully`);
+            logger.error(`Some file might not be readable or It might be possible the dirPath is corrupt or cannot be read by tool`);
+            const jsonError = JSON.stringify(err);
+            logger.debug(`Error:- ${jsonError}`);
             
           }
     }
@@ -528,6 +552,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
 
 
 router.get("/", async (req, res) => {
+  logger.info(`Scanning req received`);
   let dirPath = req.query.dirPath;
   const projectname = req.query.indexPath;
   let tempdir = dirPath.split('\\');
@@ -539,20 +564,28 @@ router.get("/", async (req, res) => {
   scandataval.nofolders=0;
   
   doccount=0;
-  await Data.deleteMany({})
+  await Data.deleteMany({});
+  logger.info("All documents are deleted");
   scanDirectory(dirPath,lastdirname,dirlength)
     .then(async () => {
       // Directory scanning completed
-      try{
+      logger.info("Directory scanning completed");
+      try{ 
+        logger.info("Indexing to Opensearch has Started...");
         await indexandcopy(projectname);
+        logger.info("Indexing to Opensearch has Finished and Data folder is copied to location...");
       }
       catch(e){
-        console.log(e);
+        //console.log(e);
+        logger.error("Failed to index to Opensearch or failed to copy the data folder");
+        logger.error("Please check if Opensearch is running");
+        const jsonError = JSON.stringify(e);
+        logger.debug(`Error:- ${jsonError}`);
         return res.status(500).json({
           message:"Indexing done but Failed to copy folder to project path. Please do it manually"
         })
       }
-      
+      logger.info("Scanning and Indexing is completed successfully");
       return res.status(200).json({
             message:"Directory scanned and Indexed documents Successful",
             doccount:doccount
@@ -561,7 +594,9 @@ router.get("/", async (req, res) => {
 
     })
     .catch((err) => {
-      console.error("Unable to scan directory", err);
+      logger.error("Failed to Scan the directory. Please check if directory is correct");
+      logger.error("Failed to Scan the directory. Please check if Mongodb and Opensearch is Running")
+
       return res.status(500).json({
         message:"Unable to scan directory"
       });
