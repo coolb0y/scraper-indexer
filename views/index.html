@@ -212,16 +212,28 @@
 
 
           //second event listener for indexing
+          let tempindexcount = 0;
           var eventSource2 = new EventSource('http://localhost:3333/api/indexdata');
           eventSource2.onmessage = function(event) {
+            console.log(event,'event');
+            clearTimeout(closeSource2);
+            setTimeout(closeSource2,10000);
             var data1 = JSON.parse(event.data);
-            console.log('Received data:', data1.indexcount);
+            //console.log('Received data:', data1.indexcount);
+            try{
+              tempindexcount = Math.max(tempindexcount,data1.indexcount)
+            }
+            catch(e){
+
+            }
+          
+
            if(tempcount !==0 && tempcount>data1.indexcount && data1.indexcount!==0){
             document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + data1.indexcount+ " documents"+'</p>';
            }
-           else if(tempcount===data1.indexcount){
+           else if(tempcount>=data1.indexcount){
               document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + data1.indexcount+ " documents"+'</p>';
-              eventSource2.close();
+              setTimeout(closeSource2, 5000);
             }
           
           };
@@ -229,12 +241,20 @@
           eventSource2.onerror = function(error) {
             console.error('EventSource error:', error);
           // Close the connection
+          if(tempindexcount===tempcount) {
+            document.getElementById('indexLive').innerHTML =  '<p>' +"We have indexed " + tempindexcount+ " documents"+'</p>';
+          }
+          else{
             document.getElementById('indexLive').innerHTML = '<p>OOPS Scanning might be in process but failed to received number of files scanned.</p>';
-            eventSource2.close(); 
+            setTimeout(closeSource2, 5000);
+         }
+           
             
           };
 
-
+          const closeSource2 = ()=>{
+            eventSource2.close();
+          }
 
       axios.get('http://localhost:3333/api/scanDir', {
         params: { dirPath: dirPath,
