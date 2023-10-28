@@ -84,10 +84,10 @@
     <span id="dirSpan" style="display: none;color:red">This directory does not exists</span>
     </div>
 
-    <label for="indexing" style="font-size:1.2rem !important">Please Enter the Project Name</label>
+    <!-- <label for="indexing" style="font-size:1.2rem !important">Please Enter the Project Name</label>
     <div>
-    <input type="text" id="projectPath" name="projectName"   placeholder="Enter Project Name.." autocomplete="false"  required onkeyup={projecthandleInputChange()}>
-    <span id="projectSpan" style="display: none;color:red">This project already exists</span>
+    <input type="text" id="projectPath" name="projectName"   placeholder="Enter Project Name.." autocomplete="false"  required onkeyup={projecthandleInputChange()}> -->
+    <!-- <span id="projectSpan" style="display: none;color:red">This project already exists</span> -->
     </div>
 
     <button type="submit" id="scanBtn"  onclick={scanDirectory()}>Start Scanning</button>
@@ -143,13 +143,13 @@
       })
 
     }
-    var timeoutId1;
-    function projecthandleInputChange() {
-     console.log('project input changed')
-    clearTimeout(timeoutId1);
-    timeoutId1 = setTimeout(checkproject, 500);
+    // var timeoutId1;
+    // function projecthandleInputChange() {
+    //  console.log('project input changed')
+    // clearTimeout(timeoutId1);
+    // timeoutId1 = setTimeout(checkproject, 500);
 
-    }
+    // }
 
     function checkproject(){
       var projectPath = document.getElementById('projectPath').value;
@@ -187,7 +187,7 @@
 
     function scanDirectory() {
       var dirPath = document.getElementById('dirPath').value;
-      var indexPath = document.getElementById('projectPath').value;
+      // var indexPath = document.getElementById('projectPath').value;
       let tempcount = 0;
       const dirButton = document.getElementById('scanBtn');
       dirButton.innerText = 'Scanning...';
@@ -238,7 +238,7 @@
 
       axios.get('http://localhost:3333/api/scanDir', {
         params: { dirPath: dirPath,
-        indexPath: indexPath
+        // indexPath: indexPath
         }
       })
       .then(function(response) {

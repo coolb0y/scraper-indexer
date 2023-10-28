@@ -6,7 +6,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
 require("dotenv").config();
-const logger = require("./logger");
+const logger = require("./loggerProject");
 // Used to log everything like GET, POST, etc requests
 app.use(morgan("dev"));
 //console.log("process.env.MONGODB_URI", process.env.MONGODB_URI);
@@ -21,6 +21,10 @@ path.join(__dirname, `./node_modules/pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js
 path.join(__dirname, `./node_modules/pdf-parse/lib/pdf.js/v1.10.100/build/pdf.worker.js`);
 path.join(__dirname, `./node_modules/pdf-parse/lib/pdf.js/v1.10.100/build/pdf.worker.js.map`);
 path.join(__dirname, `./node_modules/pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js.map`);
+
+const argument = process.argv[2]; // The first element is the Node.js executable, and the second is the script file
+global.rootProjectName =  argument || "chipsterProject";
+
 
 global.scandataval = {
   nofiles:0,
@@ -50,6 +54,9 @@ mongoose
   .then((res) => {
     logger.info("Connected to Database")
     
+  }).catch((err) => {
+    logger.error("Error connecting to Database, Please check if mongodb is running and reachable at port 27017")
+    throw json.stringify(err);
   })
   
 

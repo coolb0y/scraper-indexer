@@ -19,7 +19,7 @@ const ExifReader = require('exifreader');
 var ffmpeg = require('ffmpeg');
 const Data = require("./models/data");
 const indexandcopy = require("./indexOpencopy");
-const logger  = require('./logger');
+const logger  = require('./loggerScanner');
 // Read Word document
 
 let doccount = 0;
@@ -554,7 +554,9 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
 router.get("/", async (req, res) => {
   logger.info(`Scanning req received`);
   let dirPath = req.query.dirPath;
-  const projectname = req.query.indexPath;
+  //taking project name from arguments
+  const projectname =  process.argv[2] || 'defaultNameChipster';
+
   let tempdir = dirPath.split('\\');
   let lastdirname = tempdir[tempdir.length-1];
  

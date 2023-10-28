@@ -6,7 +6,7 @@ const customFormat = format.combine(format.timestamp(),format.printf((info)=>{
 }))
 
 const currentDateTime = moment().format('YYYY-MM-DD_HH-mm-ss');
-console.log(currentDateTime)
+let projectName = process.argv[2] || 'defaultNameChipster';
 
 const logger = createLogger({
         format:customFormat,
@@ -15,17 +15,17 @@ const logger = createLogger({
             level:"silly"
            }),
             new transports.File({
-                filename:`${currentDateTime}-debug.log`,
+                filename:`logs/${projectName}/indexer-${currentDateTime}-debug.log`,
                 level: 'silly',
                 maxsize: 10485760
             }),
             new transports.File({
-                filename:`${currentDateTime}-info.log`,
+                filename:`logs/${projectName}/indexer-${currentDateTime}-info.log`,
                 level: 'info',
                 maxsize: 10485760
             }),
             new transports.File({
-                filename:`${currentDateTime}-error.log`,
+                filename:`logs/${projectName}/indexer-${currentDateTime}-error.log`,
                 level: 'error',
                 maxsize: 10485760
             })
