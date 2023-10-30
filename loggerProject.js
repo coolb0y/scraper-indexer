@@ -7,31 +7,70 @@ const customFormat = format.combine(format.timestamp(),format.printf((info)=>{
 
 const currentDateTime = moment().format('YYYY-MM-DD_HH-mm-ss');
 let projectName = process.argv[2] || 'defaultNameChipster';
+let loggingMode = process.argv[3];
+
+
+let loggingNumber =0; 
+if(loggingMode==="i" || loggingMode===" i" || loggingMode===" i " || loggingMode==="i " || loggingMode==="info" || loggingMode==="Info" || loggingMode==="INFO"){
+    loggingNumber = 1;
+}
+else if(loggingMode==="v" || loggingMode===" v" || loggingMode===" v " || loggingMode==="v " || loggingMode==="verbose" || loggingMode==="Verbose" || loggingMode==="VERBOSE" ){
+   loggingNumber = 2;
+}
+
+
+let transportsArr = [
+    new transports.Console({
+    level:"silly"
+   })
+]
+
+
+if(loggingNumber===0){
+transportsArr = [
+    new transports.Console({
+    level:"silly"
+   }),
+   new transports.File({
+    filename:`Logs/${projectName}/project-${currentDateTime}-error.log`,
+    level: 'error',
+    maxsize: 10485760
+})
+]
+}
+
+else if(loggingNumber===1){
+    transportsArr = [
+        new transports.Console({
+            level:"silly"
+           }),
+           new transports.File({
+            filename:`Logs/${projectName}/project-${currentDateTime}-info.log`,
+            level: 'info',
+            maxsize: 10485760
+        })
+
+    ]
+}
+else if(loggingNumber===2){
+    transportsArr = [
+        new transports.Console({
+            level:"silly"
+           }),
+           new transports.File({
+            filename:`Logs/${projectName}/project-${currentDateTime}-debug.log`,
+            level: 'silly',
+            maxsize: 10485760
+        }),
+    ]
+}
+
 
 const logger = createLogger({
         format:customFormat,
-        transports:[
-           new transports.Console({
-            level:"silly"
-           }),
-            new transports.File({
-                filename:`logs/${projectName}/project-${currentDateTime}-debug.log`,
-                level: 'silly',
-                maxsize: 10485760
-            }),
-            new transports.File({
-                filename:`logs/${projectName}/project-${currentDateTime}-info.log`,
-                level: 'info',
-                maxsize: 10485760
-            }),
-            new transports.File({
-                filename:`logs/${projectName}/project-${currentDateTime}-error.log`,
-                level: 'error',
-                maxsize: 10485760
-            })
-
-        ]
+        transports:transportsArr
     });
+
 
 
 module.exports = logger;
