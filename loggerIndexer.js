@@ -38,8 +38,6 @@ transportsArr = [
 })
 ]
 }
-
-
 else if(loggingNumber===1){
     transportsArr = [
         new transports.Console({
