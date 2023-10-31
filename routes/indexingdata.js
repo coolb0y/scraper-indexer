@@ -20,7 +20,7 @@ router.get('/', (req, res) => {
               res.write(`data: ${JSON.stringify({indexcount})}\n\n`);
           
          
-        }, 200);
+        }, 50);
       
         // Close the server-sent event connection on client request
         req.on('close', () => {

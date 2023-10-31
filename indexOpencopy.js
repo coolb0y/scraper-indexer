@@ -78,7 +78,7 @@ async function deleteAndCreateIndex() {
         });
         indexdataval.noindexed = indexdataval.noindexed + 1;
         count++;
-        logger.info(`${indexdataval.noindexed} documents are processed`);
+        logger.debug(`${indexdataval.noindexed} documents are processed`);
 
         if (count === batchSize) {
           logger.info(`Documents of Batch size ${batchSize} are processed`);
