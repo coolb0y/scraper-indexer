@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const { Client } = require('@opensearch-project/opensearch');
 const Data = require('./models/data');
-const logger = require("./loggerIndexer");
+const logger = require("./loggerProject");
 const {exec} =require("child_process");
 const scriptPath = 'copydata.bat';
 

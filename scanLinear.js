@@ -19,7 +19,7 @@ const ExifReader = require('exifreader');
 var ffmpeg = require('ffmpeg');
 const Data = require("./models/data");
 const indexandcopy = require("./indexOpencopy");
-const logger  = require('./loggerScanner');
+const logger  = require('./loggerProject');
 // Read Word document
 
 let doccount = 0;
@@ -285,7 +285,8 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                   }
       
       
-                  else if(filetype=="video/x-matroska"){
+                  else if(filetype==="video/x-matroska" || filetype==="video/mp4" || filetype==="video/quicktime" || filetype==="video/webm" || filetype==="video/x-msvideo" || filetype==="video/x-ms-wmv" || filetype==="video/ogg"){
+                
                     try {
                       var process = new ffmpeg(filePath);
                       process.then(async function (video) {
@@ -300,6 +301,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                         let bitrate=0;
                         let length=0;
                         let width=0;
+                        
                        
                         if(video.metadata){
                           title=video.metadata.title?video.metadata.title:"";
