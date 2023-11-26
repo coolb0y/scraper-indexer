@@ -183,7 +183,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                       }
                       catch(err){
                       
-                          logger.error(`Failed to save data to databse ${filePath}. Skipping file. Scanning will continue`);
+                          logger.error(`Failed to save data to database ${filePath}. Skipping file. Scanning will continue`);
                           const jsonError = JSON.stringify(err);
                           logger.debug(jsonError);
                           
@@ -262,7 +262,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                       }
                        catch(e){
                           // console.log(e);
-                          logger.error(`Failed to save data to databse ${filePath}. Skipping file. Scanning will continue`);
+                          logger.error(`Failed to save data to database ${filePath}. Skipping file. Scanning will continue`);
                           const jsonError = JSON.stringify(e);
                           logger.debug(`Error:- ${jsonError}`);
                           
@@ -344,7 +344,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                           }
                           catch(e){
                               
-                              logger.error(`Failed to save data to databse ${filePath}. Skipping file. Scanning will continue`);
+                              logger.error(`Failed to save data to database ${filePath}. Skipping file. Scanning will continue`);
                               const jsonError = JSON.stringify(e);
                               logger.debug(jsonError);
                           }
@@ -421,7 +421,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                       
                       }
                       catch(e){
-                        logger.error(`Failed to save data to databse ${filePath}. Skipping file. Scanning will continue`);
+                        logger.error(`Failed to save data to database ${filePath}. Skipping file. Scanning will continue`);
                         const jsonError = JSON.stringify(e);
                         logger.debug(jsonError);
                       
@@ -515,7 +515,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                           }
                           catch(e){
                              // console.log(e);
-                             logger.error(`Failed to save data to databse ${filePath}. Skipping file. Scanning will continue`);
+                             logger.error(`Failed to save data to database ${filePath}. Skipping file. Scanning will continue`);
                              const jsonError = JSON.stringify(e);
                              logger.debug(`Error:- ${jsonError}`);
                              

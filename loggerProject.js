@@ -14,17 +14,17 @@ let transportsArr = [
     level:"silly"
    }),
    new transports.File({
-    filename:`Logs/${projectName}/project-${currentDateTime}-debug.log`,
+    filename:`../Projects/${projectName}/logs/project-${currentDateTime}-debug.log`,
     level: 'debug',
     maxsize: 10485760
   }),
  new transports.File({
-    filename:`Logs/${projectName}/project-${currentDateTime}-info.log`,
+    filename:`../Projects/${projectName}/logs/project-${currentDateTime}-info.log`,
     level: 'info',
     maxsize: 10485760
  }),
    new transports.File({
-    filename:`Logs/${projectName}/project-${currentDateTime}-error.log`,
+    filename:`../Projects/${projectName}/logs/project-${currentDateTime}-error.log`,
     level: 'error',
     maxsize: 10485760
 })
