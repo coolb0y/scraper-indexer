@@ -228,11 +228,11 @@
             }
           
 
-           if(tempcount !==0 && tempcount>data1.indexcount && data1.indexcount!==0){
-            document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + data1.indexcount+ " documents"+'</p>';
+           if(tempcount !==0 && tempcount>tempindexcount && tempindexcount!==0){
+            document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + tempindexcount+ " documents"+'</p>';
            }
-           else if(tempcount===data1.indexcount){
-              document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + data1.indexcount+ " documents"+'</p>';
+           else if(tempcount===tempindexcount){
+              document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + tempindexcount+ " documents"+'</p>';
               setTimeout(closeSource2, 5000);
             }
           
@@ -264,6 +264,10 @@
       })
       .then(function(response) {
         let tempcount = response.data.doccount;
+        if(tempindexcount<tempcount && tempcount!==0 && tempcount!==undefined && tempcount!==null) {
+          tempindexcount = tempcount;
+          document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + tempindexcount+ " documents"+'</p>';
+        }
         dirButton.innerText = 'Scanning Done';
         document.getElementById('scanResult').innerHTML = '<pre>' + `${response.data.message} and ${response.data.doccount} Document indexed` + '</pre>';
         // setTimeout(function() {
