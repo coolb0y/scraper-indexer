@@ -201,8 +201,11 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                       
                     }
                   }
-                   else if (filetype === "image/jpeg" || filetype === "image/png" || filetype==="image/jpg") {
+
+                
+                  else if (filetype === "image/jpeg" || filetype === "image/png" || filetype==="image/jpg" || filetype==="image/tiff"  ||filetype==="image/tif") {
                    
+                  
                     // this code works as well it is able to extract metadata height and stuff as well as advance things
                     try{
                     
@@ -283,7 +286,81 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                       
             
                   }
+
+                  else if(filetype==="image/gif" || filetype==="image/webp" || filetype==="image/avif"){
+                    
+                    try {
+                      var process = new ffmpeg(filePath);
+                      process.then(async function (image) {
+                        // Image metadata
+                      
+
+                        let imgtitle="";
+                        let imgtags="";
+                        let imageWidth=0;
+                        let imageLength=0;
+                        let imageDescription=""; 
+                       
+                        if(image.metadata){
+
+                          imgtitle=image.metadata.title?image.metadata.title:"";
+                          imgtags=image.metadata.album?image.metadata.album:"";
+                          imageDescription=image.metadata.artist?image.metadata.artist:"";
+                          imageLength=image.metadata.video.resolution?image.metadata.video.resolution.h:0;
+                          imageWidth=image.metadata.video.resolution?image.metadata.video.resolution.w:0;
+                         
       
+                          const data = new Data({
+                            id:id,
+                            title:imgtitle,
+                            filename:fileName,
+                            filetype:"image",
+                            filesize:filesize,
+                            url:url,
+                            filedetails:imageDescription,
+                            length:imageLength,
+                            width:imageWidth,
+                            imgtags:imgtags,
+                            baseurl:baseurl
+      
+                          });
+      
+                          try{
+                           
+                              await data.save();
+                              scandataval.nofiles=scandataval.nofiles+1;
+                              doccount++;
+                              logger.info(`${filePath} File scanned and data saved successfully to database`)
+                              
+                              
+                          }
+                          catch(e){
+                              
+                              logger.error(`Failed to save data to database ${filePath}. Skipping file. Scanning will continue`);
+                              const jsonError = JSON.stringify(e);
+                              logger.debug(jsonError);
+                          }
+                        
+                         // fileNames.push({id:id,title:title, fileName: fileName,artist:artist,album:album,track:track, fileType: "video",fileSize:filesize,url:url, codec:codec,duration:duration,bitrate:bitrate,resoultion:resoultion,fps:fps,audiocodec:audiocodec,audiochannels:audiochannels,audiobitrate:audiobitrate,audiosamplerate:audiosamplerate });
+                       }
+                       }, function (err) {
+                       
+                        logger.error(`Failed to scan file data ${filePath}`);
+                        const jsonError = JSON.stringify(err);
+                        logger.debug(jsonError);
+
+                      });
+                    } catch (e) {
+                    
+                      logger.error(`Failed to scan file data ${filePath}`);
+                      const jsonError = JSON.stringify(e);
+                      logger.debug(jsonError);
+
+                     
+                    }
+
+                  }
+
       
                   else if(filetype==="video/x-matroska" || filetype==="video/mp4" || filetype==="video/quicktime" || filetype==="video/webm" || filetype==="video/x-msvideo" || filetype==="video/x-ms-wmv" || filetype==="video/ogg"){
                 
