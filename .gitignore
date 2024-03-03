@@ -4,3 +4,6 @@ Projects
 ./Projects
 ./opensearch
 opensearch
+server-linux
+server-macos
+server-win.exe
