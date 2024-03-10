@@ -7,6 +7,3 @@ opensearch
 server-linux
 server-macos
 server-win.exe
-./server-linux
-./server-macos
-./server-win.exe
