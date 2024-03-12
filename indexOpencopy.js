@@ -31,8 +31,6 @@ const mapping = {
 
 async function deleteAndCreateIndex() {
 
-  
-
   try{
     
     const ifExists = await client.indices.exists({ index: indexName });
@@ -46,6 +44,10 @@ async function deleteAndCreateIndex() {
    const response = await client.indices.create({
     index: indexName,
     body: {
+      settings: {
+        number_of_shards: 1,  // Set the desired number of primary shards
+        number_of_replicas: 0,  // Set the desired number of replica shards
+      },
       mappings: {
         properties: mapping.properties,
       },
@@ -53,6 +55,7 @@ async function deleteAndCreateIndex() {
   });
   
   logger.info("Index created successfully");
+  console.log(JSON.stringify(response));
   }
   catch(error){
     logger.error("Failed to create index or update index");
@@ -149,8 +152,12 @@ async function deleteAndCreateIndex() {
 
           index: indexName,
           body: {
+            settings: {
+              number_of_shards: 1,  // Set the desired number of primary shards
+              number_of_replicas: 0,  // Set the desired number of replica shards
+            },
             mappings: {
-              properties: mapping,
+              properties: mapping.properties,
             },
           },
         });
