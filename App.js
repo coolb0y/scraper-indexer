@@ -72,7 +72,7 @@ app.use("/", (req, res, next) => {
 });
 
 
-app.use("/api/scanDir",apilogging,require("./scanLinear"));
+app.use("/api/scanDir",apilogging,require("./scanLinearcopy"));
 app.use('/api/home',apilogging,require('./routes/home'));
 app.use('/api/scandata',apilogging,require('./routes/scanningdata'));
 app.use('/api/indexdata',apilogging,require('./routes/indexingdata'));

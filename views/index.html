@@ -214,17 +214,17 @@
           //second event listener for indexing
           let tempindexcount = 0;
           var eventSource2 = new EventSource('http://localhost:3333/api/indexdata');
-          eventSource2.onmessage = function(event) {
+          eventSource2.onmessage = function(eventval) {
            // console.log(event,'event');
             clearTimeout(closeSource2);
-            setTimeout(closeSource2,10000);
-            var data1 = JSON.parse(event.data);
-            //console.log('Received data:', data1.indexcount);
+            //setTimeout(closeSource2,10000);
+            var data1 = JSON.parse(eventval.data);
+            console.log('Received data:', data1.indexcount);
             try{
               tempindexcount = Math.max(tempindexcount,data1.indexcount)
             }
             catch(e){
-
+              console.log('indexingdata api call. Something went wrong')
             }
           
 
@@ -247,7 +247,7 @@
           }
           else{
             document.getElementById('indexLive').innerHTML = '<p>OOPS Scanning might be in process but failed to received number of files scanned.</p>';
-            setTimeout(closeSource2, 5000);
+            setTimeout(closeSource2, 10000);
          }
            
             

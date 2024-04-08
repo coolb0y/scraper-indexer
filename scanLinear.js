@@ -1,8 +1,9 @@
 
 const router = require("express").Router();
 const fs = require("fs-extra");
-var gracefulFs = require('graceful-fs')
-gracefulFs.gracefulify(fs)
+var gracefulFs = require('graceful-fs');
+const {exec} =require("child_process");
+gracefulFs.gracefulify(fs);
 const path = require('path');
 let mime = require('mime-types')
 const { convert } = require('html-to-text');
@@ -13,14 +14,14 @@ const {
   } = require('uuid');
 const cheerio = require('cheerio');
 const WordExtractor = require("word-extractor"); 
-
-// const ExifParser = require('exif-parser');
 const ExifReader = require('exifreader');
 var ffmpeg = require('ffmpeg');
 const Data = require("./models/data");
 const indexandcopy = require("./indexOpencopy");
 const logger  = require('./loggerProject');
-// Read Word document
+const pathToFfmpeg = require('ffmpeg-static');
+const pathToFfprobe = require('ffprobe-static');
+const { promisify } = require('util');
 
 let doccount = 0;
 
@@ -80,12 +81,7 @@ const options = {
       ],
       decodeEntities: true,
 
-
-  
-   
   };
-
-
 
 
 // Recursive function to scan directory
@@ -363,12 +359,13 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
 
       
                   else if(filetype==="video/x-matroska" || filetype==="video/mp4" || filetype==="video/quicktime" || filetype==="video/webm" || filetype==="video/x-msvideo" || filetype==="video/x-ms-wmv" || filetype==="video/ogg"){
-                
                     try {
-                      var process = new ffmpeg(filePath);
+                     // var process = new ffmpeg(filePath);
+                      const process = await new ffmpeg(filePath, { bin: pathToFfmpeg })
+                      console.log(pathToFfmpeg);
+                     // process.setFfmpegPath(pathToFfmpeg);
                       process.then(async function (video) {
                         // Video metadata
-                       
                         let title="";
                         let artist="";
                         let album="";
@@ -378,8 +375,8 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                         let bitrate=0;
                         let length=0;
                         let width=0;
-                        
-                       
+                        logger.info(JSON.stringify(video.metadata));
+
                         if(video.metadata){
                           title=video.metadata.title?video.metadata.title:"";
                           artist=video.metadata.artist?video.metadata.artist:"";
@@ -391,7 +388,41 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                           length=video.metadata.video.resolution?video.metadata.video.resolution.h:0;
                           width=video.metadata.video.resolution?video.metadata.video.resolution.w:0;
                          
-      
+                          if(!title && filetype==="video/mp4"){
+                           
+                            try{
+                             exec(`titleFinder.exe ${filePath}`, (error, stdout, stderr) => {
+                                if (error) {
+                                  const jsonError = JSON.stringify(error);
+                                  logger.error(jsonError);  
+                                }
+                                if(stdout){
+                                  let jsonvideoData = JSON.parse(stdout);
+                                  title = jsonvideoData.title;
+                                  logger.info(JSON.stringify(title),'title by python script');
+                                  if(!album){
+                                    album = jsonvideoData.album;
+                                  }
+                                  if(!artist){
+                                    artist = jsonvideoData.albumartist;
+                                  }
+
+                                }
+                                if (stderr) {
+                                  logger.error("Script Stdout error take place");
+                                  const jsonError = JSON.stringify(error);
+                                  logger.debug(jsonError);
+                                  
+                                  // console.error(`Script error: ${stderr}`);
+                                }
+                              });
+                            }
+                            catch(e){
+                              logger.error("Error failed to extract video title");
+                              logger.error(JSON.stringify(e));
+                            }
+                          }
+
                           const data = new Data({
                             id:id,
                               title:title,
@@ -449,12 +480,7 @@ async function scanDirectory(dirPath,lastdirname,dirlength) {
                       let dataBuffer = fs.readFileSync(filePath);
                       const data = await pdf(dataBuffer)
                       let title="";
-                     
-                     
-                    
                       const titletemp = data.info.Title;
-                     
-
                       let cleanedData = data.text.replace(/[\n\/\\><-]+|\s+/g, ' ');
                       if(titletemp && titletemp!=="Untitled"){
                         title = titletemp;
