@@ -20,6 +20,7 @@ const pathToFfprobe = require("ffprobe-static");
 ffmpeg.setFfmpegPath(pathToFfmpeg);
 ffmpeg.setFfprobePath(pathToFfprobe.path);
 const { promisify } = require("util");
+const ffmpegNew = require("ffmpeg");
 const ffprobePromise = promisify(ffmpeg.ffprobe);
 
 let doccount = 0;
@@ -81,6 +82,26 @@ const options = {
     //{ selector: 'title', options: { itemPrefix: "" }},
   ],
   decodeEntities: true,
+};
+
+const findImageInfo = async (imagepath) => {
+  return new Promise((resolve, reject) => {
+    try {
+      ffmpeg.ffprobe(imagepath, function (err, info) {
+        if (err) {
+          logger.error(JSON.stringify(err));
+          console.error(err);
+          reject(err);
+        } else {
+          resolve(info);
+        }
+      });
+    } catch (error) {
+      logger.error(JSON.stringify(err));
+      console.error(error);
+      reject(error);
+    }
+  });
 };
 
 const findVideoInfo = async (videofilepath) => {
@@ -233,7 +254,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                   id: id,
                   title: title,
                   filename: fileName,
-                  filetype: "html",
+                  filetype: "webpage",
                   filesize: filesize,
                   url: url,
 
@@ -350,77 +371,129 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
               }
             } else if (
               filetype === "image/gif" ||
-              filetype === "image/webp" 
-              //||
-             // filetype === "image/avif"
+              filetype === "image/webp" ||
+              filetype === "image/avif"
             ) {
               try {
+                const imageBuffer = fs.readFileSync(filePath);
+                const result = ExifReader.load(imageBuffer);
+                let imageWidth = 0;
+                let imageLength = 0;
+                let imgtitle = "";
+                let imgtags = "";
+                let imageDescription = "";
 
-                
-                // ffprobePromise(filePath)
-                // then(async (image)=>{
-                //   let imgtitle = "";
-                //   let imgtags = "";
-                //   let imageWidth = 0;
-                //   let imageLength = 0;
-                //   let imageDescription = "";
-  
-                //   if (image && image.streams && image.streams.length) {
-                //     imgtitle = image.streams[0].title
-                //       ? image.streams[0].title
-                //       : "";
-                //     imgtags = image.streams[0].album
-                //       ? image.streams[0].album
-                //       : "";
-                //     imageDescription = image.streams[0].artist
-                //       ? image.streams[0].artist
-                //       : "";
-                //     imageLength = image.streams[0].height
-                //       ? image.streams[0].height
-                //       : 0;
-                //     imageWidth = image.streams[0].width
-                //       ? image.streams[0].width
-                //       : 0;
-  
-                //     const data = new Data({
-                //       id: id,
-                //       title: imgtitle,
-                //       filename: fileName,
-                //       filetype: "image",
-                //       filesize: filesize,
-                //       url: url,
-                //       filedetails: imageDescription,
-                //       length: imageLength,
-                //       width: imageWidth,
-                //       imgtags: imgtags,
-                //       baseurl: baseurl,
-                //     });
-  
-                //     try {
-                //       await data.save();
-                //       scandataval.nofiles = scandataval.nofiles + 1;
-                //       doccount++;
-                //       logger.info(
-                //         `${filePath} File scanned and data saved successfully to database`
-                //       );
-                //     } catch (e) {
-                //       logger.error(
-                //         `Failed to save data to database ${filePath}. Skipping file. Scanning will continue`
-                //       );
-                //       const jsonError = JSON.stringify(e);
-                //       logger.debug(jsonError);
-                //     }
-                //   }
-                // })
-                // .catch((err)=>{
-                //  logger.error(`Failed to scan file `);
-                //  logger.error(JSON.stringify(err));
-                // })
-               
+                if (filetype === "image/webp") {
+                  imageWidth = result
+                    ? result["ImageWidth"]
+                      ? result["ImageWidth"].value
+                      : 0
+                    : 0;
+                  imageLength = result
+                    ? result["ImageHeight"]
+                      ? result["ImageHeight"].value
+                      : 0
+                    : 0;
+
+                  if (result) {
+                    console.log(result);
+                    if (
+                      result.ImageDescription &&
+                      result.ImageDescription.description
+                    ) {
+                      imageDescription =
+                        result.ImageDescription.description.replace(
+                          /[\n\/\\><-]+|\s+/g,
+                          " "
+                        );
+                    }
+
+                    if (result.title && result.title.description) {
+                      imgtitle = result.title.description.replace(
+                        /[\n\/\\><-]+|\s+/g,
+                        " "
+                      );
+                    }
+                    if (result.subject && result.title.description) {
+                      imgtags = result.subject.description.replace(
+                        /[\n\/\\><-]+|\s+/g,
+                        " "
+                      );
+                    }
+                  }
+                } else if (filetype === "image/gif") {
+                  imageWidth = result
+                    ? result["Image Width"]
+                      ? result["Image Width"].value
+                      : 0
+                    : 0;
+                  imageLength = result
+                    ? result["Image Height"]
+                      ? result["Image Height"].value
+                      : 0
+                    : 0;
+
+                  if (result) {
+                    console.log(result);
+                    if (
+                      result.ImageDescription &&
+                      result.ImageDescription.description
+                    ) {
+                      imageDescription =
+                        result.ImageDescription.description.replace(
+                          /[\n\/\\><-]+|\s+/g,
+                          " "
+                        );
+                    }
+
+                    if (result.title && result.title.description) {
+                      imgtitle = result.title.description.replace(
+                        /[\n\/\\><-]+|\s+/g,
+                        " "
+                      );
+                    }
+                    if (result.subject && result.title.description) {
+                      imgtags = result.subject.description.replace(
+                        /[\n\/\\><-]+|\s+/g,
+                        " "
+                      );
+                    }
+                  }
+                }
+
+                const data = new Data({
+                  id: id,
+                  title: imgtitle,
+                  filename: fileName,
+                  filetype: "image",
+                  filesize: filesize,
+                  url: url,
+                  filedetails: imageDescription,
+                  length: imageLength,
+                  width: imageWidth,
+                  imgtags: imgtags,
+                  baseurl: baseurl,
+                });
+
+                try {
+                  // console.log(data.filedetails)
+                  await data.save();
+                  scandataval.nofiles = scandataval.nofiles + 1;
+                  doccount++;
+                  logger.info(`${filePath} scanned and saved to database`);
+                  logger.debug(`Number of Document scanned are ${doccount}`);
+                } catch (e) {
+                  // console.log(e);
+                  logger.error(
+                    `Failed to save data to database ${filePath}. Skipping file. Scanning will continue`
+                  );
+                  const jsonError = JSON.stringify(e);
+                  logger.debug(`Error:- ${jsonError}`);
+                }
               } catch (e) {
-                logger.error(`Failed to scan file data ${filePath}`);
-                const jsonError = JSON.stringify(e);
-                logger.debug(jsonError);
+                logger.error(
+                  `Failed to save data to database ${filePath}. Skipping file. Scanning will continue`
+                );
               }
             }
 
@@ -435,26 +508,14 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
             ) {
               try {
                 logger.debug("file path: " + filePath);
-
-                // ffmpeg.ffprobe(filePath, async function (err, metadata) {
-                // if (err) {
-                //   logger.error(`Failed to scan file data ${filePath}`);
-                //   logger.debug(JSON.stringify(err));
-                //   return;
-                // }
-
-                // ffprobePromise(filePath)
-                //   .then(async () => {
-                // Replace with the actual path
                 findVideoInfo(filePath)
                   .then(async (metadata) => {
-
-                    let title = '';
-                    let artist = '';
-                    let album = '';
-                    let track = '';
-                    let codec = '';
-                    var duration = '';
+                    let title = "";
+                    let artist = "";
+                    let album = "";
+                    let track = "";
+                    let codec = "";
+                    var duration = "";
                     let length = 0;
                     let width = 0;
                     const indexvideo = filePath.indexOf(lastdirname);
@@ -464,25 +525,24 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                       .split("\\")[0];
                     let baseurlvideo = "http://" + hostnamevideo;
                     //console.log(hostname,baseurl,'hostname','baseurl')
-        
-                    const startIndexvideo = filePath.indexOf(hostnamevideo) + hostnamevideo.length;
+
+                    const startIndexvideo =
+                      filePath.indexOf(hostnamevideo) + hostnamevideo.length;
                     const pathAfterDomainvideo = filePath
                       .substring(startIndexvideo)
                       .replace(/\\/g, "/");
-        
+
                     let urlvideo = baseurlvideo + pathAfterDomainvideo;
                     if (metadata.format) {
-                    
                       duration = metadata.format.duration || 0;
                       codec = metadata.format.format_name || "";
                     }
 
-                    if(metadata.format && metadata.format.tags){
+                    if (metadata.format && metadata.format.tags) {
                       title = metadata.format.tags.title || "";
                       artist = metadata.format.tags.artist || "";
                       album = metadata.format.tags.album || "";
                       track = metadata.format.tags.track || "";
-                     
                     }
 
                     if (metadata.streams && metadata.streams.length > 0) {
