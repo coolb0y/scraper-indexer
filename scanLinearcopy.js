@@ -17,11 +17,10 @@ const indexandcopy = require("./indexOpencopy");
 const logger = require("./loggerProject");
 const pathToFfmpeg = require("ffmpeg-static"); // Assuming you're still using ffmpeg-static
 const pathToFfprobe = require("ffprobe-static");
+path.join(__dirname, `./ffprobe.exe`);
 ffmpeg.setFfmpegPath(pathToFfmpeg);
-ffmpeg.setFfprobePath(pathToFfprobe.path);
-const { promisify } = require("util");
-const ffmpegNew = require("ffmpeg");
-const ffprobePromise = promisify(ffmpeg.ffprobe);
+ffmpeg.setFfprobePath('./ffprobe.exe');
+
 
 let doccount = 0;
 
@@ -257,7 +256,6 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                   filetype: "webpage",
                   filesize: filesize,
                   url: url,
-
                   filedetails: cleanedText,
                   baseurl: baseurl,
                 });
