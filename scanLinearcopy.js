@@ -17,12 +17,70 @@ const indexandcopy = require("./indexOpencopy");
 const logger = require("./loggerProject");
 const pathToFfmpeg = require("ffmpeg-static"); // Assuming you're still using ffmpeg-static
 const pathToFfprobe = require("ffprobe-static");
+const { Client } = require('@opensearch-project/opensearch');
 path.join(__dirname, `./ffprobe.exe`);
 ffmpeg.setFfmpegPath(pathToFfmpeg);
-ffmpeg.setFfprobePath('./ffprobe.exe');
-
+ffmpeg.setFfprobePath("./ffprobe.exe");
 
 let doccount = 0;
+
+const host = "127.0.0.1";
+const protocol = "http";
+const port = 9200;
+const auth = "admin:admin"; // For testing only. Don't store credentials in code.
+let client;
+const indexName = "chipsterindex";
+const batchSize = 500;
+const mapping = {
+  properties: {
+    title: {
+      type: "text", // Make the "title" field text searchable
+    },
+    imagetags: {
+      type: "text", // Make the "title" field text searchable
+    },
+    baseurl: {
+      type: "keyword", // Make the "category" field filterable
+    },
+    filetype: {
+      type: "keyword", // Make the "category" field filterable
+    },
+  },
+};
+
+async function deleteAndCreateIndex() {
+  try {
+    const ifExists = await client.indices.exists({ index: indexName });
+    logger.info("Checking if Index exists...");
+    if (ifExists && ifExists.body) {
+      logger.info("Index exists trying to delete...");
+      await client.indices.delete({ index: indexName });
+      logger.info("Index deleted successfully");
+    }
+
+    const response = await client.indices.create({
+      index: indexName,
+      body: {
+        settings: {
+          number_of_shards: 1, // Set the desired number of primary shards
+          number_of_replicas: 0, // Set the desired number of replica shards
+        },
+        mappings: {
+          properties: mapping.properties,
+        },
+      },
+    });
+
+    logger.info("Index created successfully");
+    console.log(JSON.stringify(response));
+  } catch (error) {
+    logger.error("Failed to create index or update index");
+    logger.error(
+      "Failed to create index or update index Please check if Opensearch is running"
+    );
+    throw new Error("Failed to create index or update index");
+  }
+}
 
 const options = {
   ignoreHref: true, // ignore <a> tags and their content
@@ -83,26 +141,6 @@ const options = {
   decodeEntities: true,
 };
 
-const findImageInfo = async (imagepath) => {
-  return new Promise((resolve, reject) => {
-    try {
-      ffmpeg.ffprobe(imagepath, function (err, info) {
-        if (err) {
-          logger.error(JSON.stringify(err));
-          console.error(err);
-          reject(err);
-        } else {
-          resolve(info);
-        }
-      });
-    } catch (error) {
-      logger.error(JSON.stringify(err));
-      console.error(error);
-      reject(error);
-    }
-  });
-};
-
 const findVideoInfo = async (videofilepath) => {
   return new Promise((resolve, reject) => {
     try {
@@ -120,61 +158,6 @@ const findVideoInfo = async (videofilepath) => {
     }
   });
 };
-
-// const findVideoInfo =  (videofilepath) => {
-//   return new Promise( (resolve, reject) => {
-//     try {
-
-//     ffmpeg.ffprobe(videofilepath, function (err, info) {
-//       if(err){
-//         reject(err);
-//       }
-
-//       else {
-//         return resolve(info);
-//       }
-
-//     })
-
-//       // exec(`titleFinder.exe ${videofilepath}`, (error, stdout, stderr) => {
-//       //     if (error) {
-//       //       const jsonError = JSON.stringify(error);
-//       //       logger.error(jsonError);
-
-//       //     }
-//       //     if(stdout){
-//       //       logger.error(videofilepath)
-//       //       let jsonvideoData = JSON.parse(stdout);
-//       //       logger.error('videodata',jsonvideoData);
-//       //       let vtitle,valbum,vartist;
-//       //        if(jsonvideoData){
-//       //         if(jsonvideoData.title)
-//       //         vtitle = jsonvideoData.title;
-
-//       //         if(jsonvideoData.album)
-//       //         valbum = jsonvideoData.album;
-
-//       //         if(jsonvideoData.albumartist)
-//       //         vartist = jsonvideoData.albumartist;
-
-//       //         resolve(vtitle,valbum, vartist);
-//       //       }
-//       //      resolve(vtitle,valbum,vartist);
-
-//       //     }
-//       //     if (stderr) {
-//       //       logger.error("Script Stdout error take place");
-//       //       const jsonError = JSON.stringify(error);
-//       //       logger.debug(jsonError);
-//       //       reject();
-//       //     }
-//       //   });
-//     } catch (error) {
-//       logger.error(JSON.stringify(error));
-//       reject(error); // Reject the promise if an error occurs
-//     }
-//   });
-// };
 
 // Recursive function to scan directory
 async function scanDirectory(dirPath, lastdirname, dirlength) {
@@ -249,7 +232,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                 let cleanedText = text.replace(/[\n\/\\><-]+|\s+/g, " ");
 
                 //console.log(text);
-                const data = new Data({
+                const data = {
                   id: id,
                   title: title,
                   filename: fileName,
@@ -258,10 +241,14 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                   url: url,
                   filedetails: cleanedText,
                   baseurl: baseurl,
-                });
+                };
 
                 try {
-                  await data.save();
+                  await client.index({
+                    index: indexName,
+                    body: data,
+                  });
+                  // await data.save();
                   scandataval.nofiles = scandataval.nofiles + 1;
                   doccount++;
                   logger.info(`${filePath} scanned and saved to database`);
@@ -332,7 +319,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                   }
                 }
 
-                const data = new Data({
+                const data = {
                   id: id,
                   title: imgtitle,
                   filename: fileName,
@@ -344,11 +331,15 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                   width: imageWidth,
                   imgtags: imgtags,
                   baseurl: baseurl,
-                });
+                };
 
                 try {
                   // console.log(data.filedetails)
-                  await data.save();
+                  await client.index({
+                    index: indexName,
+                    body: data,
+                  });
+                  // await data.save();
                   scandataval.nofiles = scandataval.nofiles + 1;
                   doccount++;
                   logger.info(`${filePath} scanned and saved to database`);
@@ -367,11 +358,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                 const jsonError = JSON.stringify(e);
                 logger.debug(jsonError);
               }
-            } else if (
-              filetype === "image/gif" ||
-              filetype === "image/webp" ||
-              filetype === "image/avif"
-            ) {
+            } else if (filetype === "image/gif" || filetype === "image/webp" || filetype === "image/avif") {
               try {
                 const imageBuffer = fs.readFileSync(filePath);
                 const result = ExifReader.load(imageBuffer);
@@ -419,6 +406,39 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                       );
                     }
                   }
+                  const data = {
+                    id: id,
+                    title: imgtitle,
+                    filename: fileName,
+                    filetype: "image",
+                    filesize: filesize,
+                    url: url,
+                    filedetails: imageDescription,
+                    length: imageLength,
+                    width: imageWidth,
+                    imgtags: imgtags,
+                    baseurl: baseurl,
+                  }
+  
+                  try {
+                    // console.log(data.filedetails)
+                    await client.index({
+                      index: indexName,
+                      body: data,
+                    });
+                    scandataval.nofiles = scandataval.nofiles + 1;
+                    doccount++;
+                    logger.info(`${filePath} scanned and saved to database`);
+                    logger.debug(`Number of Document scanned are ${doccount}`);
+                  } catch (e) {
+                    // console.log(e);
+                    logger.error(
+                      `Failed to save data to database ${filePath}. Skipping file. Scanning will continue`
+                    );
+                    const jsonError = JSON.stringify(e);
+                    logger.debug(`Error:- ${jsonError}`);
+                  }
+
                 } else if (filetype === "image/gif") {
                   imageWidth = result
                     ? result["Image Width"]
@@ -459,7 +479,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                   }
                 }
 
-                const data = new Data({
+                const data = {
                   id: id,
                   title: imgtitle,
                   filename: fileName,
@@ -471,11 +491,14 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                   width: imageWidth,
                   imgtags: imgtags,
                   baseurl: baseurl,
-                });
+                }
 
                 try {
                   // console.log(data.filedetails)
-                  await data.save();
+                  await client.index({
+                    index: indexName,
+                    body: data,
+                  });
                   scandataval.nofiles = scandataval.nofiles + 1;
                   doccount++;
                   logger.info(`${filePath} scanned and saved to database`);
@@ -554,7 +577,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                       }
                     }
 
-                    const data = new Data({
+                    const data = {
                       id: id,
                       title: title,
                       filename: fileName,
@@ -569,10 +592,14 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                       length: length,
                       width: width,
                       baseurl: baseurlvideo,
-                    });
+                    };
 
                     try {
-                      await data.save();
+                      // await data.save();
+                      await client.index({
+                        index: indexName,
+                        body: data,
+                      });
                       scandataval.nofiles = scandataval.nofiles + 1;
                       doccount++;
                       logger.info(
@@ -620,7 +647,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                   }
                 }
 
-                const datavl = new Data({
+                const datavl = {
                   id: id,
                   title: title,
                   filename: fileName,
@@ -629,11 +656,14 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                   url: url,
                   filedetails: cleanedData,
                   baseurl: baseurl,
-                });
+                };
 
                 try {
                   // console.log(data.filedetails)
-                  await datavl.save();
+                  await client.index({
+                    index: indexName,
+                    body: datavl,
+                  });
                   scandataval.nofiles = scandataval.nofiles + 1;
                   doccount++;
                   logger.info(`${filePath} scanned and saved to database`);
@@ -663,7 +693,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                       let cleanedData = data.replace(/[\n\/\\><-]+|\s+/g, " ");
                       let title = cleanedData.substring(0, 30);
 
-                      const dataval = new Data({
+                      const dataval = {
                         id: id,
                         title: title,
                         filename: fileName,
@@ -672,11 +702,12 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                         url: url,
                         filedetails: cleanedData,
                         baseurl: baseurl,
-                      });
-
-                      dataval
-                        .save()
-                        .then((data) => {
+                      };
+                      client.index({
+                        index: indexName,
+                        body: dataval,
+                      })
+                        .then(() => {
                           scandataval.nofiles = scandataval.nofiles + 1;
                           doccount++;
                           logger.info(
@@ -717,7 +748,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                     .replace(/[\n\/\\><-]+|\s+/g, " ");
                   let title = cleanedData.substring(0, 30);
 
-                  const data = new Data({
+                  const data = {
                     id: id,
                     title: title,
                     filename: fileName,
@@ -726,11 +757,14 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                     url: url,
                     filedetails: cleanedData,
                     baseurl: baseurl,
-                  });
+                  };
 
                   try {
                     // console.log(data.fileDetails)
-                    await data.save();
+                    await client.index({
+                      index: indexName,
+                      body: data
+                    });
                     scandataval.nofiles = scandataval.nofiles + 1;
                     doccount++;
                     logger.info(`${filePath} scanned and saved to database`);
@@ -768,6 +802,27 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
 
 router.get("/", async (req, res) => {
   logger.info(`Scanning req received`);
+
+  try {
+    client = new Client({
+      node: `${protocol}://${auth}@${host}:${port}`,
+      ssl: {
+        rejectUnauthorized: false, // if you're using self-signed certificates with a hostname mismatch.
+      },
+    })
+  } catch (error) {
+    logger.error(
+      `Failed to connect to Opensearch. Please check if Opensearch is running`
+    );
+    logger.error(
+      `Failed to connect and Please check if Opensearch is reachable`
+    );
+    const jsonError = JSON.stringify(error);
+    logger.debug(jsonError);
+    throw new Error(
+      "Failed to connect to opensearch Please check if it is running"
+    );
+  }
   let dirPath = req.query.dirPath;
   //taking project name from arguments
   const projectname = process.argv[2] || "defaultNameChipster";
@@ -781,15 +836,28 @@ router.get("/", async (req, res) => {
   scandataval.nofolders = 0;
 
   doccount = 0;
-  await Data.deleteMany({});
-  logger.info("All documents are deleted");
+  // await Data.deleteMany({});
+  // logger.info("All documents are deleted");
+  await deleteAndCreateIndex()
+    .then(() => {
+      logger.info("Created index");
+    })
+    .catch((error) => {
+      logger.error("Failed to created or update index");
+      const jsonError = JSON.stringify(error);
+      logger.debug(jsonError);
+      return res.status(500).json({
+        message:
+          "Failed to create or update index,check if opensearch is running",
+      });
+    });
   scanDirectory(dirPath, lastdirname, dirlength)
     .then(async () => {
       // Directory scanning completed
       logger.info("Directory scanning completed");
       try {
         logger.info("Indexing to Opensearch has Started...");
-        await indexandcopy(projectname);
+        // await indexandcopy(projectname);
         logger.info(
           "Indexing to Opensearch has Finished and Data folder is copied to location..."
         );
