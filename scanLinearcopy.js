@@ -16,8 +16,7 @@ const Data = require("./models/data");
 const indexandcopy = require("./indexOpencopy");
 const logger = require("./loggerProject");
 const pathToFfmpeg = require("ffmpeg-static"); // Assuming you're still using ffmpeg-static
-const pathToFfprobe = require("ffprobe-static");
-const { Client } = require('@opensearch-project/opensearch');
+const { Client } = require("@opensearch-project/opensearch");
 path.join(__dirname, `./ffprobe.exe`);
 ffmpeg.setFfmpegPath(pathToFfmpeg);
 ffmpeg.setFfprobePath("./ffprobe.exe");
@@ -30,7 +29,6 @@ const port = 9200;
 const auth = "admin:admin"; // For testing only. Don't store credentials in code.
 let client;
 const indexName = "chipsterindex";
-const batchSize = 500;
 const mapping = {
   properties: {
     title: {
@@ -251,11 +249,11 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                   // await data.save();
                   scandataval.nofiles = scandataval.nofiles + 1;
                   doccount++;
-                  logger.info(`${filePath} scanned and saved to database`);
+                  logger.info(`${filePath} scanned and saved to opensearch`);
                   logger.debug(`Number of Document scanned are ${doccount}`);
                 } catch (err) {
                   logger.error(
-                    `Failed to save data to database ${filePath}. Skipping file. Scanning will continue`
+                    `Failed to save data to opensearch ${filePath}. Skipping file. Scanning will continue`
                   );
                   const jsonError = JSON.stringify(err);
                   logger.debug(jsonError);
@@ -342,12 +340,12 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                   // await data.save();
                   scandataval.nofiles = scandataval.nofiles + 1;
                   doccount++;
-                  logger.info(`${filePath} scanned and saved to database`);
+                  logger.info(`${filePath} scanned and saved to opensearch`);
                   logger.debug(`Number of Document scanned are ${doccount}`);
                 } catch (e) {
                   // console.log(e);
                   logger.error(
-                    `Failed to save data to database ${filePath}. Skipping file. Scanning will continue`
+                    `Failed to save data to opensearch ${filePath}. Skipping file. Scanning will continue`
                   );
                   const jsonError = JSON.stringify(e);
                   logger.debug(`Error:- ${jsonError}`);
@@ -358,7 +356,11 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                 const jsonError = JSON.stringify(e);
                 logger.debug(jsonError);
               }
-            } else if (filetype === "image/gif" || filetype === "image/webp" || filetype === "image/avif") {
+            } else if (
+              filetype === "image/gif" ||
+              filetype === "image/webp" ||
+              filetype === "image/avif"
+            ) {
               try {
                 const imageBuffer = fs.readFileSync(filePath);
                 const result = ExifReader.load(imageBuffer);
@@ -418,8 +420,8 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                     width: imageWidth,
                     imgtags: imgtags,
                     baseurl: baseurl,
-                  }
-  
+                  };
+
                   try {
                     // console.log(data.filedetails)
                     await client.index({
@@ -428,17 +430,16 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                     });
                     scandataval.nofiles = scandataval.nofiles + 1;
                     doccount++;
-                    logger.info(`${filePath} scanned and saved to database`);
+                    logger.info(`${filePath} scanned and saved to opensearch`);
                     logger.debug(`Number of Document scanned are ${doccount}`);
                   } catch (e) {
                     // console.log(e);
                     logger.error(
-                      `Failed to save data to database ${filePath}. Skipping file. Scanning will continue`
+                      `Failed to save data to opensearch ${filePath}. Skipping file. Scanning will continue`
                     );
                     const jsonError = JSON.stringify(e);
                     logger.debug(`Error:- ${jsonError}`);
                   }
-
                 } else if (filetype === "image/gif") {
                   imageWidth = result
                     ? result["Image Width"]
@@ -491,7 +492,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                   width: imageWidth,
                   imgtags: imgtags,
                   baseurl: baseurl,
-                }
+                };
 
                 try {
                   // console.log(data.filedetails)
@@ -501,19 +502,19 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                   });
                   scandataval.nofiles = scandataval.nofiles + 1;
                   doccount++;
-                  logger.info(`${filePath} scanned and saved to database`);
+                  logger.info(`${filePath} scanned and saved to opensearch`);
                   logger.debug(`Number of Document scanned are ${doccount}`);
                 } catch (e) {
                   // console.log(e);
                   logger.error(
-                    `Failed to save data to database ${filePath}. Skipping file. Scanning will continue`
+                    `Failed to save data to opensearch ${filePath}. Skipping file. Scanning will continue`
                   );
                   const jsonError = JSON.stringify(e);
                   logger.debug(`Error:- ${jsonError}`);
                 }
               } catch (e) {
                 logger.error(
-                  `Failed to save data to database ${filePath}. Skipping file. Scanning will continue`
+                  `Failed to save data to opensearch ${filePath}. Skipping file. Scanning will continue`
                 );
               }
             }
@@ -603,11 +604,11 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                       scandataval.nofiles = scandataval.nofiles + 1;
                       doccount++;
                       logger.info(
-                        `${filePath} File scanned and data saved successfully to database`
+                        `${filePath} File scanned and data saved successfully to opensearch`
                       );
                     } catch (e) {
                       logger.error(
-                        `Failed to save data to database ${filePath}. Skipping file. Scanning will continue`
+                        `Failed to save data to opensearch ${filePath}. Skipping file. Scanning will continue`
                       );
                       logger.debug(JSON.stringify(e));
                     }
@@ -666,11 +667,11 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                   });
                   scandataval.nofiles = scandataval.nofiles + 1;
                   doccount++;
-                  logger.info(`${filePath} scanned and saved to database`);
+                  logger.info(`${filePath} scanned and saved to opensearch`);
                   logger.debug(`Number of Document scanned are ${doccount}`);
                 } catch (e) {
                   logger.error(
-                    `Failed to save data to database ${filePath}. Skipping file. Scanning will continue`
+                    `Failed to save data to opensearch ${filePath}. Skipping file. Scanning will continue`
                   );
                   const jsonError = JSON.stringify(e);
                   logger.debug(jsonError);
@@ -703,15 +704,16 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                         filedetails: cleanedData,
                         baseurl: baseurl,
                       };
-                      client.index({
-                        index: indexName,
-                        body: dataval,
-                      })
+                      client
+                        .index({
+                          index: indexName,
+                          body: dataval,
+                        })
                         .then(() => {
                           scandataval.nofiles = scandataval.nofiles + 1;
                           doccount++;
                           logger.info(
-                            `${filePath} scanned and saved to the database`
+                            `${filePath} scanned and saved to the opensearch`
                           );
                           logger.debug(
                             `Number of Documents scanned is ${doccount}`
@@ -719,7 +721,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                         })
                         .catch((e) => {
                           logger.error(
-                            `Failed to save data to the database ${filePath}. Skipping file. Scanning will continue`
+                            `Failed to save data to the opensearch ${filePath}. Skipping file. Scanning will continue`
                           );
                           const jsonError = JSON.stringify(e);
                           logger.debug(jsonError);
@@ -763,16 +765,16 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                     // console.log(data.fileDetails)
                     await client.index({
                       index: indexName,
-                      body: data
+                      body: data,
                     });
                     scandataval.nofiles = scandataval.nofiles + 1;
                     doccount++;
-                    logger.info(`${filePath} scanned and saved to database`);
+                    logger.info(`${filePath} scanned and saved to opensearch`);
                     logger.debug(`Number of Document scanned are ${doccount}`);
                   } catch (e) {
                     // console.log(e);
                     logger.error(
-                      `Failed to save data to database ${filePath}. Skipping file. Scanning will continue`
+                      `Failed to save data to opensearch ${filePath}. Skipping file. Scanning will continue`
                     );
                     const jsonError = JSON.stringify(e);
                     logger.debug(`Error:- ${jsonError}`);
@@ -809,7 +811,7 @@ router.get("/", async (req, res) => {
       ssl: {
         rejectUnauthorized: false, // if you're using self-signed certificates with a hostname mismatch.
       },
-    })
+    });
   } catch (error) {
     logger.error(
       `Failed to connect to Opensearch. Please check if Opensearch is running`
@@ -856,22 +858,19 @@ router.get("/", async (req, res) => {
       // Directory scanning completed
       logger.info("Directory scanning completed");
       try {
-        logger.info("Indexing to Opensearch has Started...");
-        // await indexandcopy(projectname);
         logger.info(
-          "Indexing to Opensearch has Finished and Data folder is copied to location..."
+          "Copying of data folder to project location has Started..."
         );
+        await indexandcopy(projectname);
+        logger.info("Data folder is copied to location...");
       } catch (e) {
         //console.log(e);
-        logger.error(
-          "Failed to index to Opensearch or failed to copy the data folder"
-        );
-        logger.error("Please check if Opensearch is running");
+        logger.error("Failed to copy the data folder");
         const jsonError = JSON.stringify(e);
         logger.debug(`Error:- ${jsonError}`);
         return res.status(500).json({
           message:
-            "Indexing done but Failed to copy folder to project path. Please do it manually",
+            "Failed to copy folder to project path. Please do it manually",
         });
       }
       logger.info("Scanning and Indexing is completed successfully");
@@ -885,7 +884,7 @@ router.get("/", async (req, res) => {
         "Failed to Scan the directory. Please check if directory is correct"
       );
       logger.error(
-        "Failed to Scan the directory. Please check if Mongodb and Opensearch is Running"
+        "Failed to Scan the directory. Please check if Opensearch is Running"
       );
 
       return res.status(500).json({
