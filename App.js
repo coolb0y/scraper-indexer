@@ -4,7 +4,6 @@ const app = express();
 const morgan = require("morgan");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const mongoose = require("mongoose");
 require("dotenv").config();
 const logger = require("./loggerProject");
 // Used to log everything like GET, POST, etc requests

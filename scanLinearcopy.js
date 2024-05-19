@@ -12,7 +12,6 @@ const cheerio = require("cheerio");
 const WordExtractor = require("word-extractor");
 const ExifReader = require("exifreader");
 const ffmpeg = require("fluent-ffmpeg");
-const Data = require("./models/data");
 const indexandcopy = require("./indexOpencopy");
 const logger = require("./loggerProject");
 const pathToFfmpeg = require("ffmpeg-static"); // Assuming you're still using ffmpeg-static
