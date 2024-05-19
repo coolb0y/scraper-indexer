@@ -874,7 +874,7 @@ router.get("/", async (req, res) => {
       }
       logger.info("Scanning and Indexing is completed successfully");
       return res.status(200).json({
-        message: "Directory scanned and Indexed documents Successful",
+        message: "Directory scanned and Indexed documents Successfully",
         doccount: doccount,
       });
     })
