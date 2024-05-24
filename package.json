@@ -24,6 +24,7 @@
     "path": "^0.12.7",
     "pdf-parse": "^1.1.1",
     "pkg": "^5.8.1",
+    "process": "^0.11.10",
     "uuid": "^9.0.0",
     "winston": "^3.11.0",
     "word-extractor": "^1.0.4"
