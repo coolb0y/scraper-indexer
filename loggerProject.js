@@ -6,7 +6,7 @@ const customFormat = format.combine(format.timestamp(),format.printf((info)=>{
 }))
 
 const currentDateTime = moment().format('YYYY-MM-DD_HH-mm-ss');
-let projectName = process.argv[2] || 'defaultNameChipster';
+let projectName = process.argv[2] || 'chipsterProject';
 
 
 let transportsArr = [
@@ -29,9 +29,6 @@ let transportsArr = [
     maxsize: 10485760
 })
 ]
-
-
-
 
 const logger = createLogger({
         format:customFormat,

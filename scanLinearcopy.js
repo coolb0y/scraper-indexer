@@ -14,12 +14,11 @@ const ExifReader = require("exifreader");
 const ffmpeg = require("fluent-ffmpeg");
 const indexandcopy = require("./indexOpencopy");
 const logger = require("./loggerProject");
-const pathToFfmpeg = require("ffmpeg-static"); // Assuming you're still using ffmpeg-static
 const { Client } = require("@opensearch-project/opensearch");
+const processs = require("process");
 const getFormattedDateTime = require("./helper/formattedDateTime");
 const thumbnailCreator = require("./createThumbnail");
-path.join(__dirname, `./ffprobe.exe`);
-ffmpeg.setFfmpegPath(pathToFfmpeg);
+ffmpeg.setFfmpegPath("./ffmpeg.exe");
 ffmpeg.setFfprobePath("./ffprobe.exe");
 
 let doccount = 0;
@@ -534,9 +533,9 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                 let retry = 1;
                 let timeValue = getFormattedDateTime();
                 let thumbnailFileName = `${timeValue}${id}.jpg`;
-                logger.error(process.cwd());
-                // let outputPath =
-                // process.cwd() + "\\..\\Projects\\thumbnails\\" + thumbnailFileName;
+                let outputFolderPath = processs.cwd() + `\\..\\Projects\\${rootProjectName}\\thumbnails\\`;
+                fs.mkdirSync(outputFolderPath, { recursive: true });
+                let outputPath = outputFolderPath + thumbnailFileName;
                 // logger.error("Output ankursingh File path: " + outputPath);
                 let thumbnailUrl = `http://chipstersearch/opensearch/thumbnails/${thumbnailFileName}`;
                 try {
@@ -858,7 +857,7 @@ router.get("/", async (req, res) => {
       logger.info("Client Created for opensearch");
       let dirPath = req.query.dirPath;
       //taking project name from arguments
-      const projectname = process.argv[2] || "defaultNameChipster";
+      const projectname = process.argv[2] || "chipsterProject";
 
       let tempdir = dirPath.split("\\");
       let lastdirname = tempdir[tempdir.length - 1];
