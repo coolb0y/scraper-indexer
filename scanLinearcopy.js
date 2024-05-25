@@ -533,13 +533,15 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                 let retry = 1;
                 let timeValue = getFormattedDateTime();
                 let thumbnailFileName = `${timeValue}${id}.jpg`;
-                let outputFolderPath = processs.cwd() + `\\..\\Projects\\${rootProjectName}\\thumbnails\\`;
+                let outputFolderPath =
+                  processs.cwd() +
+                  `\\..\\Projects\\${rootProjectName}\\thumbnails\\`;
                 fs.mkdirSync(outputFolderPath, { recursive: true });
                 let outputPath = outputFolderPath + thumbnailFileName;
                 // logger.error("Output ankursingh File path: " + outputPath);
                 let thumbnailUrl = `http://chipstersearch/opensearch/thumbnails/${thumbnailFileName}`;
                 try {
-                  thumbnailCreator(filePath, outputPath);
+                  await thumbnailCreator(filePath, outputPath);
                 } catch (e) {
                   while (retry <= 3) {
                     try {

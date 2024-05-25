@@ -12,6 +12,8 @@ const aspectRatioSize = maintainAspectRatio(360);
 
 // Function to detect scene changes and create a thumbnail
 function detectScenesAndCreateThumbnail(inputVideoPath, outputThumbnailPath) {
+
+  return new Promise((resolve, reject) => {
   const tempSceneFilePath = path.resolve(`scenes_${path.basename(inputVideoPath, '.mp4')}.txt`);
 
   ffmpeg(inputVideoPath)
@@ -33,18 +35,23 @@ function detectScenesAndCreateThumbnail(inputVideoPath, outputThumbnailPath) {
         } else {
           const hasSceneChanges = data.includes('scene_score');
           createThumbnail(inputVideoPath, outputThumbnailPath, !hasSceneChanges);
+          resolve();
         }
         fs.unlink(tempSceneFilePath, () => {}); // Clean up temporary file
+       
       });
     })
     .on('error', function(err) {
       createThumbnail(inputVideoPath, outputThumbnailPath, true); // Fallback to simple thumbnail
     })
     .saveToFile('/dev/null'); // Specify a dummy output to satisfy ffmpeg requirements
+  })
 }
 
 // Function to create a thumbnail
 function createThumbnail(inputVideoPath, outputThumbnailPath, fallback = false) {
+  return new Promise((resolve,reject)=>{
+
   const vfFilter = fallback 
     ? `thumbnail,scale=${aspectRatioSize}` 
     : `select=gt(scene\\,0.3),scale=${aspectRatioSize}`;
@@ -57,24 +64,33 @@ function createThumbnail(inputVideoPath, outputThumbnailPath, fallback = false) 
     ])
     .on('end', () => {
       console.log(`Thumbnail for ${path.basename(inputVideoPath)} extracted successfully`);
+      resolve();
     })
     .on('error', (err) => {
       if (!fallback) {
         console.log(`Scene detection failed for ${path.basename(inputVideoPath)}, retrying with thumbnail filter...`);
         createThumbnail(inputVideoPath, outputThumbnailPath, true);
       } else {
+        reject();
         console.error(`Error extracting thumbnail for ${path.basename(inputVideoPath)}:`, err.message);
       }
     })
     .save(outputThumbnailPath);
+  })
 }
 
 // Loop through the videos
 const thumbnailCreator = async (videoFilePath,thumbnailFilePath)=>{
   const inputVideoPath = path.resolve(videoFilePath);
   const outputThumbnailPath = path.resolve(thumbnailFilePath);
-
-  detectScenesAndCreateThumbnail(inputVideoPath, outputThumbnailPath);
+  try{
+    await detectScenesAndCreateThumbnail(inputVideoPath, outputThumbnailPath);
+  }
+  catch(err){
+    logger.error(`Error extracting thumbnail for ${videoFilePath}`);
+    logger.error(JSON.stringify(err));
+  }
+  
 }
 
 module.exports = thumbnailCreator;
