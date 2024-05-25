@@ -16,6 +16,8 @@ const indexandcopy = require("./indexOpencopy");
 const logger = require("./loggerProject");
 const pathToFfmpeg = require("ffmpeg-static"); // Assuming you're still using ffmpeg-static
 const { Client } = require("@opensearch-project/opensearch");
+const getFormattedDateTime = require("./helper/formattedDateTime");
+const thumbnailCreator = require("./createThumbnail");
 path.join(__dirname, `./ffprobe.exe`);
 ffmpeg.setFfmpegPath(pathToFfmpeg);
 ffmpeg.setFfprobePath("./ffprobe.exe");
@@ -529,6 +531,29 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
             ) {
               try {
                 logger.debug("file path: " + filePath);
+                let retry = 1;
+                let timeValue = getFormattedDateTime();
+                let thumbnailFileName = `${timeValue}${id}.jpg`;
+                logger.error(process.cwd());
+                // let outputPath =
+                // process.cwd() + "\\..\\Projects\\thumbnails\\" + thumbnailFileName;
+                // logger.error("Output ankursingh File path: " + outputPath);
+                let thumbnailUrl = `http://chipstersearch/opensearch/thumbnails/${thumbnailFileName}`;
+                try {
+                  thumbnailCreator(filePath, outputPath);
+                } catch (e) {
+                  while (retry <= 3) {
+                    try {
+                      thumbnailCreator(filePath, thumbnailFileName);
+                      break;
+                    } catch (e) {
+                      logger.error(
+                        `Error creating thumbnail, Trial Number: ${retry}`
+                      );
+                    }
+                    retry++;
+                  }
+                }
                 findVideoInfo(filePath)
                   .then(async (metadata) => {
                     let title = "";
@@ -592,6 +617,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                       length: length,
                       width: width,
                       baseurl: baseurlvideo,
+                      thumbnailUrl: thumbnailUrl,
                     };
 
                     try {
@@ -612,7 +638,6 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                       logger.debug(JSON.stringify(e));
                     }
                     // Handle the video info (metadata)
-                    console.log("Video Info:", info);
                   })
                   .catch((error) => {
                     // Handle errors
@@ -801,93 +826,109 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
   }
 }
 
+let connectOpensearch = () => {
+  return new Promise((resolve, reject) => {
+    try {
+      client = new Client({
+        node: `${protocol}://${auth}@${host}:${port}`,
+        ssl: {
+          rejectUnauthorized: false, // if you're using self-signed certificates with a hostname mismatch.
+        },
+      });
+      resolve();
+    } catch (error) {
+      logger.error(
+        `Failed to connect to Opensearch. Please check if Opensearch is running`
+      );
+      logger.error(
+        `Failed to connect and Please check if Opensearch is reachable`
+      );
+      const jsonError = JSON.stringify(error);
+      logger.debug(jsonError);
+      reject(error);
+    }
+  });
+};
+
 router.get("/", async (req, res) => {
   logger.info(`Scanning req received`);
 
-  try {
-    client = new Client({
-      node: `${protocol}://${auth}@${host}:${port}`,
-      ssl: {
-        rejectUnauthorized: false, // if you're using self-signed certificates with a hostname mismatch.
-      },
-    });
-  } catch (error) {
-    logger.error(
-      `Failed to connect to Opensearch. Please check if Opensearch is running`
-    );
-    logger.error(
-      `Failed to connect and Please check if Opensearch is reachable`
-    );
-    const jsonError = JSON.stringify(error);
-    logger.debug(jsonError);
-    throw new Error(
-      "Failed to connect to opensearch Please check if it is running"
-    );
-  }
-  let dirPath = req.query.dirPath;
-  //taking project name from arguments
-  const projectname = process.argv[2] || "defaultNameChipster";
-
-  let tempdir = dirPath.split("\\");
-  let lastdirname = tempdir[tempdir.length - 1];
-
-  let dirlength = lastdirname.length;
-
-  scandataval.nofiles = 0;
-  scandataval.nofolders = 0;
-
-  doccount = 0;
-  // await Data.deleteMany({});
-  // logger.info("All documents are deleted");
-  await deleteAndCreateIndex()
-    .then(() => {
-      logger.info("Created index");
-    })
-    .catch((error) => {
-      logger.error("Failed to created or update index");
-      const jsonError = JSON.stringify(error);
-      logger.debug(jsonError);
-      return res.status(500).json({
-        message:
-          "Failed to create or update index,check if opensearch is running",
-      });
-    });
-  scanDirectory(dirPath, lastdirname, dirlength)
+  connectOpensearch()
     .then(async () => {
-      // Directory scanning completed
-      logger.info("Directory scanning completed");
-      try {
-        logger.info(
-          "Copying of data folder to project location has Started..."
-        );
-        await indexandcopy(projectname);
-        logger.info("Data folder is copied to location...");
-      } catch (e) {
-        //console.log(e);
-        logger.error("Failed to copy the data folder");
-        const jsonError = JSON.stringify(e);
-        logger.debug(`Error:- ${jsonError}`);
-        return res.status(500).json({
-          message:
-            "Failed to copy folder to project path. Please do it manually",
+      logger.info("Client Created for opensearch");
+      let dirPath = req.query.dirPath;
+      //taking project name from arguments
+      const projectname = process.argv[2] || "defaultNameChipster";
+
+      let tempdir = dirPath.split("\\");
+      let lastdirname = tempdir[tempdir.length - 1];
+      let dirlength = lastdirname.length;
+
+      scandataval.nofiles = 0;
+      scandataval.nofolders = 0;
+
+      doccount = 0;
+      // await Data.deleteMany({});
+      // logger.info("All documents are deleted");
+      await deleteAndCreateIndex()
+        .then(() => {
+          logger.info("Created index");
+          scanDirectory(dirPath, lastdirname, dirlength)
+            .then(async () => {
+              // Directory scanning completed
+              logger.info("Directory scanning completed");
+              try {
+                logger.info(
+                  "Copying of data folder to project location has Started..."
+                );
+                await indexandcopy(projectname);
+                logger.info("Data folder is copied to location...");
+              } catch (e) {
+                //console.log(e);
+                logger.error("Failed to copy the data folder");
+                const jsonError = JSON.stringify(e);
+                logger.debug(`Error:- ${jsonError}`);
+                return res.status(500).json({
+                  message:
+                    "Failed to copy folder to project path. Please do it manually",
+                });
+              }
+              logger.info("Scanning and Indexing is completed successfully");
+              return res.status(200).json({
+                message: "Directory scanned and Indexed documents Successfully",
+                doccount: doccount,
+              });
+            })
+            .catch((err) => {
+              logger.error(
+                "Failed to Scan the directory. Please check if directory is correct"
+              );
+              logger.error(
+                "Failed to Scan the directory. Please check if Opensearch is Running"
+              );
+
+              return res.status(500).json({
+                message: "Unable to scan directory",
+              });
+            });
+        })
+        .catch((error) => {
+          logger.error("Failed to created or update index");
+          const jsonError = JSON.stringify(error);
+          logger.debug(jsonError);
+          return res.status(500).json({
+            message:
+              "Failed to create or update index,check if opensearch is running",
+          });
         });
-      }
-      logger.info("Scanning and Indexing is completed successfully");
-      return res.status(200).json({
-        message: "Directory scanned and Indexed documents Successfully",
-        doccount: doccount,
-      });
     })
     .catch((err) => {
       logger.error(
-        "Failed to Scan the directory. Please check if directory is correct"
+        "Failed to connect to Opensearch. Please check if Opensearch is running"
       );
-      logger.error(
-        "Failed to Scan the directory. Please check if Opensearch is Running"
-      );
-
       return res.status(500).json({
-        message: "Unable to scan directory",
+        message:
+          "Failed to connect to Opensearch. Please check if Opensearch is running on 9200",
       });
     });
 });
