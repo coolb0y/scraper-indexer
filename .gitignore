@@ -7,3 +7,7 @@ opensearch
 server-linux
 server-macos
 server-win.exe
+ffmpeg.exe
+ffprobe.exe
+./ffprobe.exe
+./ffmpeg.exe
