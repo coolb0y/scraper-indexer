@@ -121,60 +121,26 @@ const findVideoInfo = async (videofilepath) => {
   });
 };
 
-// const findVideoInfo =  (videofilepath) => {
-//   return new Promise( (resolve, reject) => {
-//     try {
-
-//     ffmpeg.ffprobe(videofilepath, function (err, info) {
-//       if(err){
-//         reject(err);
-//       }
-
-//       else {
-//         return resolve(info);
-//       }
-
-//     })
-
-//       // exec(`titleFinder.exe ${videofilepath}`, (error, stdout, stderr) => {
-//       //     if (error) {
-//       //       const jsonError = JSON.stringify(error);
-//       //       logger.error(jsonError);
-
-//       //     }
-//       //     if(stdout){
-//       //       logger.error(videofilepath)
-//       //       let jsonvideoData = JSON.parse(stdout);
-//       //       logger.error('videodata',jsonvideoData);
-//       //       let vtitle,valbum,vartist;
-//       //        if(jsonvideoData){
-//       //         if(jsonvideoData.title)
-//       //         vtitle = jsonvideoData.title;
-
-//       //         if(jsonvideoData.album)
-//       //         valbum = jsonvideoData.album;
-
-//       //         if(jsonvideoData.albumartist)
-//       //         vartist = jsonvideoData.albumartist;
-
-//       //         resolve(vtitle,valbum, vartist);
-//       //       }
-//       //      resolve(vtitle,valbum,vartist);
-
-//       //     }
-//       //     if (stderr) {
-//       //       logger.error("Script Stdout error take place");
-//       //       const jsonError = JSON.stringify(error);
-//       //       logger.debug(jsonError);
-//       //       reject();
-//       //     }
-//       //   });
-//     } catch (error) {
-//       logger.error(JSON.stringify(error));
-//       reject(error); // Reject the promise if an error occurs
-//     }
-//   });
-// };
+function checkThumbnailExists(filePath) {
+      // Get the directory and file name
+      const directory = path.dirname(filePath);
+      const fileNameWithoutExtension = path.basename(filePath, path.extname(filePath));
+  
+      // Construct the thumbnail folder path
+      const thumbnailFolderPath = path.join(directory, 'chipsterthumbs');
+  
+      // Construct the PNG file path within the thumbnail folder
+      const thumbnailFilePath = path.join(thumbnailFolderPath, `${fileNameWithoutExtension}.png`);
+  
+      // Check if the thumbnail folder exists and the corresponding PNG file exists
+      const thumbnailExists = fs.existsSync(thumbnailFolderPath) && fs.existsSync(thumbnailFilePath);
+  
+      // Return both the existence boolean and the thumbnail file path
+      return {
+          thumbnailExists: thumbnailExists,
+          thumbnailFilePath: thumbnailExists ? thumbnailFilePath : null
+      };
+}
 
 // Recursive function to scan directory
 async function scanDirectory(dirPath, lastdirname, dirlength) {
@@ -505,6 +471,9 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
               filetype === "video/ogg"
             ) {
               try {
+
+                let { thumbnailExists, thumbnailFilePath } = checkThumbnailExists(filePath);
+
                 logger.debug("file path: " + filePath);
                 findVideoInfo(filePath)
                   .then(async (metadata) => {
@@ -568,6 +537,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                       duration: duration,
                       length: length,
                       width: width,
+                      thumbnailPath: thumbnailExists ? thumbnailFilePath : null,
                       baseurl: baseurlvideo,
                     });
 

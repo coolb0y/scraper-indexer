@@ -11,7 +11,7 @@ const dataSchema = mongoose.Schema({
         artist:{ type: String },
         album:{ type: String },
         track:{ type: String },
-       
+        thumbnailPath:{ type: String},
         duration:{ type: Number},
         bitrate:{ type: Number},
         length:{ type: Number },
