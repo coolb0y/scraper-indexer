@@ -19,8 +19,7 @@ const pathToFfmpeg = require("ffmpeg-static"); // Assuming you're still using ff
 const pathToFfprobe = require("ffprobe-static");
 path.join(__dirname, `./ffprobe.exe`);
 ffmpeg.setFfmpegPath(pathToFfmpeg);
-ffmpeg.setFfprobePath('./ffprobe.exe');
-
+ffmpeg.setFfprobePath("./ffprobe.exe");
 
 let doccount = 0;
 
@@ -83,25 +82,25 @@ const options = {
   decodeEntities: true,
 };
 
-const findImageInfo = async (imagepath) => {
-  return new Promise((resolve, reject) => {
-    try {
-      ffmpeg.ffprobe(imagepath, function (err, info) {
-        if (err) {
-          logger.error(JSON.stringify(err));
-          console.error(err);
-          reject(err);
-        } else {
-          resolve(info);
-        }
-      });
-    } catch (error) {
-      logger.error(JSON.stringify(err));
-      console.error(error);
-      reject(error);
-    }
-  });
-};
+// const findImageInfo = async (imagepath) => {
+//   return new Promise((resolve, reject) => {
+//     try {
+//       ffmpeg.ffprobe(imagepath, function (err, info) {
+//         if (err) {
+//           logger.error(JSON.stringify(err));
+//           console.error(err);
+//           reject(err);
+//         } else {
+//           resolve(info);
+//         }
+//       });
+//     } catch (error) {
+//       logger.error(JSON.stringify(err));
+//       console.error(error);
+//       reject(error);
+//     }
+//   });
+// };
 
 const findVideoInfo = async (videofilepath) => {
   return new Promise((resolve, reject) => {
@@ -122,24 +121,28 @@ const findVideoInfo = async (videofilepath) => {
 };
 
 function checkThumbnailExists(filePath) {
-      // Get the directory and file name
-      const directory = path.dirname(filePath);
-      const fileNameWithoutExtension = path.basename(filePath, path.extname(filePath));
-  
-      // Construct the thumbnail folder path
-      const thumbnailFolderPath = path.join(directory, 'chipsterthumbs');
-  
-      // Construct the PNG file path within the thumbnail folder
-      const thumbnailFilePath = path.join(thumbnailFolderPath, `${fileNameWithoutExtension}.png`);
-  
-      // Check if the thumbnail folder exists and the corresponding PNG file exists
-      const thumbnailExists = fs.existsSync(thumbnailFolderPath) && fs.existsSync(thumbnailFilePath);
-  
-      // Return both the existence boolean and the thumbnail file path
-      return {
-          thumbnailExists: thumbnailExists,
-          thumbnailFilePath: thumbnailExists ? thumbnailFilePath : null
-      };
+  // Get the directory and file name
+  const directory = path.dirname(filePath);
+  const fileNameWithoutExtension = path.basename(
+    filePath,
+    path.extname(filePath)
+  );
+
+  // Construct the thumbnail folder path
+  const thumbnailFolderPath = path.join(directory, "chipsterthumbs");
+
+  // Construct the PNG file path within the thumbnail folder
+  const thumbnailFilePath = path.join(
+    thumbnailFolderPath,
+    `${fileNameWithoutExtension}.png`
+  );
+
+  // Check if the thumbnail folder exists and the corresponding PNG file exists
+  const thumbnailExists =
+    fs.existsSync(thumbnailFolderPath) && fs.existsSync(thumbnailFilePath);
+
+  // Return both the existence boolean and the thumbnail file path
+  return thumbnailExists;
 }
 
 // Recursive function to scan directory
@@ -255,77 +258,84 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
             ) {
               // this code works as well it is able to extract metadata height and stuff as well as advance things
               try {
-                const imageBuffer = fs.readFileSync(filePath);
-                const result = ExifReader.load(imageBuffer);
+                const dirPath = path.dirname(filePath);
+                // Split the directory path and get the last folder
+                const folders = dirPath.split(path.sep);
+                const lastFolder = folders[folders.length - 1];
 
-                let imgtitle = "";
-                let imgtags = "";
-                let imageWidth = result
-                  ? result["Image Width"]
-                    ? result["Image Width"].value
-                    : 0
-                  : 0;
-                let imageLength = result
-                  ? result["Image Height"]
-                    ? result["Image Height"].value
-                    : 0
-                  : 0;
-                let imageDescription = "";
+                if (lastFolder !== "chipsterthumbs") {
+                  const imageBuffer = fs.readFileSync(filePath);
+                  const result = ExifReader.load(imageBuffer);
 
-                if (result) {
-                  if (
-                    result.ImageDescription &&
-                    result.ImageDescription.description
-                  ) {
-                    imageDescription =
-                      result.ImageDescription.description.replace(
+                  let imgtitle = "";
+                  let imgtags = "";
+                  let imageWidth = result
+                    ? result["Image Width"]
+                      ? result["Image Width"].value
+                      : 0
+                    : 0;
+                  let imageLength = result
+                    ? result["Image Height"]
+                      ? result["Image Height"].value
+                      : 0
+                    : 0;
+                  let imageDescription = "";
+
+                  if (result) {
+                    if (
+                      result.ImageDescription &&
+                      result.ImageDescription.description
+                    ) {
+                      imageDescription =
+                        result.ImageDescription.description.replace(
+                          /[\n\/\\><-]+|\s+/g,
+                          " "
+                        );
+                    }
+
+                    if (result.title && result.title.description) {
+                      imgtitle = result.title.description.replace(
                         /[\n\/\\><-]+|\s+/g,
                         " "
                       );
+                    }
+                    if (result.subject && result.title.description) {
+                      imgtags = result.subject.description.replace(
+                        /[\n\/\\><-]+|\s+/g,
+                        " "
+                      );
+                    }
                   }
 
-                  if (result.title && result.title.description) {
-                    imgtitle = result.title.description.replace(
-                      /[\n\/\\><-]+|\s+/g,
-                      " "
+                  const data = new Data({
+                    id: id,
+                    title: imgtitle,
+                    filename: fileName,
+                    filetype: "image",
+                    filesize: filesize,
+                    url: url,
+                    filedetails: imageDescription,
+                    length: imageLength,
+                    width: imageWidth,
+                    imgtags: imgtags,
+                    baseurl: baseurl,
+                  });
+
+                  try {
+                    // console.log(data.filedetails)
+                    await data.save();
+                    scandataval.nofiles = scandataval.nofiles + 1;
+                    doccount++;
+                    logger.info(`${filePath} scanned and saved to database`);
+                    logger.debug(`Number of Document scanned are ${doccount}`);
+                  } catch (e) {
+                    // console.log(e);
+                    logger.error(
+                      `Failed to save data to database ${filePath}. Skipping file. Scanning will continue`
                     );
+                    const jsonError = JSON.stringify(e);
+                    logger.debug(`Error:- ${jsonError}`);
                   }
-                  if (result.subject && result.title.description) {
-                    imgtags = result.subject.description.replace(
-                      /[\n\/\\><-]+|\s+/g,
-                      " "
-                    );
-                  }
-                }
-
-                const data = new Data({
-                  id: id,
-                  title: imgtitle,
-                  filename: fileName,
-                  filetype: "image",
-                  filesize: filesize,
-                  url: url,
-                  filedetails: imageDescription,
-                  length: imageLength,
-                  width: imageWidth,
-                  imgtags: imgtags,
-                  baseurl: baseurl,
-                });
-
-                try {
-                  // console.log(data.filedetails)
-                  await data.save();
-                  scandataval.nofiles = scandataval.nofiles + 1;
-                  doccount++;
-                  logger.info(`${filePath} scanned and saved to database`);
-                  logger.debug(`Number of Document scanned are ${doccount}`);
-                } catch (e) {
-                  // console.log(e);
-                  logger.error(
-                    `Failed to save data to database ${filePath}. Skipping file. Scanning will continue`
-                  );
-                  const jsonError = JSON.stringify(e);
-                  logger.debug(`Error:- ${jsonError}`);
                 }
               } catch (e) {
                 //console.log(e);
@@ -471,8 +481,20 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
               filetype === "video/ogg"
             ) {
               try {
+                let thumbnailExists = checkThumbnailExists(filePath);
+                const fileNameWithoutExtension = path.basename(
+                  filePath,
+                  path.extname(filePath)
+                );
+                let thumbnailFilePath;
 
-                let { thumbnailExists, thumbnailFilePath } = checkThumbnailExists(filePath);
+                if (thumbnailExists) {
+                  thumbnailFilePath =
+                    baseurl +
+                    "/chipsterthumbs/" +
+                    fileNameWithoutExtension +
+                    ".png";
+                }
 
                 logger.debug("file path: " + filePath);
                 findVideoInfo(filePath)
