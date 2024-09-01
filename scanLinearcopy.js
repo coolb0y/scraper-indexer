@@ -482,16 +482,27 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
             ) {
               try {
                 let thumbnailExists = checkThumbnailExists(filePath);
+
                 const fileNameWithoutExtension = path.basename(
                   filePath,
                   path.extname(filePath)
                 );
-                let thumbnailFilePath;
+                let thumbnailFilePath =
+                  "http://chipstersearch/images/defaultthumbnail.png";
 
                 if (thumbnailExists) {
+                  let indexOfFileName = filePath.indexOf(
+                    fileNameWithoutExtension
+                  );
+                  let thumbnailPathTemp = filePath.slice(
+                    index + dirlength+1,
+                    indexOfFileName
+                  ).replace(/\\/g, "/");
+
                   thumbnailFilePath =
-                    baseurl +
-                    "/chipsterthumbs/" +
+                    "http://" +
+                    thumbnailPathTemp +
+                    "chipsterthumbs/" +
                     fileNameWithoutExtension +
                     ".png";
                 }
@@ -559,7 +570,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                       duration: duration,
                       length: length,
                       width: width,
-                      thumbnailPath: thumbnailExists ? thumbnailFilePath : null,
+                      thumbnailPath: thumbnailFilePath,
                       baseurl: baseurlvideo,
                     });
 
