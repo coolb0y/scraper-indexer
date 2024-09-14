@@ -491,13 +491,12 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                   "http://chipstersearch/images/defaultthumbnail.png";
 
                 if (thumbnailExists) {
-                  let indexOfFileName = filePath.indexOf(
+                  let indexOfFileName = filePath.lastIndexOf(
                     fileNameWithoutExtension
                   );
-                  let thumbnailPathTemp = filePath.slice(
-                    index + dirlength+1,
-                    indexOfFileName
-                  ).replace(/\\/g, "/");
+                  let thumbnailPathTemp = filePath
+                    .slice(index + dirlength + 1, indexOfFileName)
+                    .replace(/\\/g, "/");
 
                   thumbnailFilePath =
                     "http://" +
@@ -505,6 +504,8 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                     "chipsterthumbs/" +
                     fileNameWithoutExtension +
                     ".png";
+
+                  thumbnailFilePath = thumbnailFilePath.replaceAll(" ", "%20");
                 }
 
                 logger.debug("file path: " + filePath);
