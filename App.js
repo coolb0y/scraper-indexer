@@ -6,14 +6,9 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
 require("dotenv").config();
-const logger = require("./loggerProject");
+const logger = require("./helper/loggerProject");
 // Used to log everything like GET, POST, etc requests
 app.use(morgan("dev"));
-//console.log("process.env.MONGODB_URI", process.env.MONGODB_URI);
-// It ensures that we prevent Cross-Origin Resource Sharing(CORS) errors
-// If client made req on localhost:4000, and received res from server which
-// has localhost:3000 req will fail. It is always the case with RESTful APIs
-// So, we attach headers from servers to client to tell browser that it's OK
 app.use(cors());
 
 const path = require('path');
@@ -31,9 +26,8 @@ global.scandataval = {
   nofolders:0,
 
 };
-global.indexdataval = {
-  noindexed:0
-};
+global.indexdataval = 0;
+
 
 const apilogging = (req, res, next) => {
   const apiRoute = req.originalUrl; // Get the full URL

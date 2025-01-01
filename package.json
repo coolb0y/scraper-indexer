@@ -38,5 +38,11 @@
     "targets": [
       "node18-win-x86"
     ]
+  },
+  "devDependencies": {
+    "eslint": "^9.17.0"
+  },
+  "scripts": {
+    "start:debug": "nodemon --inspect app.js"
   }
 }
