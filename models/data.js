@@ -7,7 +7,7 @@ const dataSchema = mongoose.Schema({
         filetype:{ type: String},
         filesize:{ type: Number },
         url:{ type: String },
-        filedetails:{ type: String },
+        filedetails: { type: String},
         artist:{ type: String },
         album:{ type: String },
         track:{ type: String },
@@ -16,14 +16,8 @@ const dataSchema = mongoose.Schema({
         bitrate:{ type: Number},
         length:{ type: Number },
         width:{ type: Number },
-       
-       
-       
-       
         imgtags:{ type: String },
-       
         baseurl:{ type: String},
-
 });
 dataSchema.index({url: 1 }, { unique: true });
 

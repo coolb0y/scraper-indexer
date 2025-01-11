@@ -1,302 +1,226 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Directory Scanner</title>
-  <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
+    <title>Directory Scanner</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
 
-    form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 0 0 8px 2px rgba(0, 0, 0, 0.2);
-  padding: 20px;
-  min-width: 626px;
-}
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 0 8px 2px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            min-width: 626px;
+        }
 
-    input[type="text"] {
-      margin-bottom: 10px;
-      padding: 8px;
-      width: 400px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-    }
+        input[type="text"] {
+            margin-bottom: 10px;
+            padding: 8px;
+            width: 400px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
 
-    button[type="submit"] {
-      background-color: #3498db;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      margin: 5px;
-      min-width: 134px;
-    }
+        button[type="submit"] {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 5px;
+            min-width: 134px;
+        }
 
-    button[type="submit"]:hover {
-      background-color: #2980b9;
-    }
+            button[type="submit"]:hover {
+                background-color: #2980b9;
+            }
 
-    .wronginput{
-      border-color: red !important;
-      border-width: 2px !important;
-    }
+        .wronginput {
+            border-color: red !important;
+            border-width: 2px !important;
+        }
 
-    .error
-    {
-      animation: shake 0.2s ease-in-out 0s 2 !important;
-      border-width: 2px !important;
-      border-color: red !important;
-      box-shadow: 0 0 8px 2px rgba(255, 0, 0, 0.2) !important;
-    }
-    /* button[type="submit"]:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    } */
+        .error {
+            animation: shake 0.2s ease-in-out 0s 2 !important;
+            border-width: 2px !important;
+            border-color: red !important;
+            box-shadow: 0 0 8px 2px rgba(255, 0, 0, 0.2) !important;
+        }
 
-    @keyframes shake {
-    0% { margin-left: 0rem; }
-    25% { margin-left: 0.5rem; }
-    75% { margin-left: -0.5rem; }
-    100% { margin-left: 0rem; }
-   }
+        @keyframes shake {
+            0% {
+                margin-left: 0rem;
+            }
 
-    #scanResult,
-    #indexResult {
-      margin-top: 20px;
-    }
-  </style>
+            25% {
+                margin-left: 0.5rem;
+            }
+
+            75% {
+                margin-left: -0.5rem;
+            }
+
+            100% {
+                margin-left: 0rem;
+            }
+        }
+
+        #scanResult,
+        #indexResult {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
- 
-  <form id="directoryScannerForm">
-    <h1 style="display:block">Directory Scanner & Indexer Tool</h1>
 
-    <label for="dirPath" style="font-size:1.2rem !important">Enter Folder Path To Scan</label>
-    <div >
-    <input type="text" id="dirPath" name="dirPath"  placeholder="Enter Folder Path.."  autocomplete="false" required onkeyup={handleInputChange()}>
-    <span id="dirSpan" style="display: none;color:red">This directory does not exists</span>
-    </div>
+    <form id="directoryScannerForm">
+        <h1 style="display:block">Directory Scanner & Indexer Tool</h1>
 
-    <!-- <label for="indexing" style="font-size:1.2rem !important">Please Enter the Project Name</label>
-    <div>
-    <input type="text" id="projectPath" name="projectName"   placeholder="Enter Project Name.." autocomplete="false"  required onkeyup={projecthandleInputChange()}> -->
-    <!-- <span id="projectSpan" style="display: none;color:red">This project already exists</span> -->
-    </div>
+        <label for="dirPath" style="font-size:1.2rem !important">Enter Folder Path To Scan</label>
+        <div>
+            <input type="text" id="dirPath" name="dirPath" placeholder="Enter Folder Path.." autocomplete="false" required onkeyup={handleInputChange()}>
+            <span id="dirSpan" style="display: none;color:red">This directory does not exists</span>
+        </div>
 
-    <button type="submit" id="scanBtn"  onclick={scanDirectory()}>Start Scanning</button>
-    <!-- <button type="submit" id="indexBtn" onclick={indexOpensearch()}>Start Indexing</button> -->
-    <!-- <a href="file://///C:/Users/gameS/OneDrive/Desktop/go-work/Projects">Click to open Project folder</a> -->
-    <div id="scanLive"></div>
-    <div id="indexLive"></div>
-    <div id="scanResult"></div>
-    <div id="indexResult"></div>
-  </form>
+        <button type="submit" id="scanBtn" onclick={scanDirectory()}>Start Scanning</button>
+        <div id="scanLive"></div>
+        <div id="indexLive"></div>
+        <div id="scanResult"></div>
+        <div id="indexResult"></div>
+    </form>
 
-  
-  
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        let timeoutId;
 
-  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-  <script>
-    let timeoutId;
-
-    function handleInputChange() {
-     // console.log('input changed')
-   
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(checkpath, 500);
-
-    }
-
-    function checkpath(){
-      var dirPath = document.getElementById('dirPath').value;
-     
-      axios.get("/api/pathexists", {
-        params: { dirPath: dirPath }
-      })
-      .then((res)=>{
-        //console.log(res.data)
-        if(res.data.ans==='true'){
-         // console.log('inside true statement')
-          var element = document.getElementById("dirPath");
-          element.classList.remove("error");
-          var spanelement = document.getElementById("dirSpan");
-          spanelement.style.display = "none";
-        
+        function handleInputChange() {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(checkpath, 500);
         }
-        else if(res.data.ans==='false'){
-          var element = document.getElementById("dirPath");
-          element.classList.add("error");
-          var spanelement = document.getElementById("dirSpan");
-          spanelement.style.display = "block";
+
+        function checkpath() {
+            var dirPath = document.getElementById('dirPath').value;
+
+            axios.get("/api/pathexists", {
+                params: { dirPath: dirPath }
+            })
+                .then((res) => {
+                    //console.log(res.data)
+                    if (res.data.ans === 'true') {
+                        // console.log('inside true statement')
+                        var element = document.getElementById("dirPath");
+                        element.classList.remove("error");
+                        var spanelement = document.getElementById("dirSpan");
+                        spanelement.style.display = "none";
+                    }
+                    else if (res.data.ans === 'false') {
+                        var element = document.getElementById("dirPath");
+                        element.classList.add("error");
+                        var spanelement = document.getElementById("dirSpan");
+                        spanelement.style.display = "block";
+                    }
+                })
+                .catch((e) => {
+                    console.log(e)
+                })
         }
-      
-      })
-      .catch((e)=>{
-        console.log(e)
-      })
 
-    }
-    // var timeoutId1;
-    // function projecthandleInputChange() {
-    //  console.log('project input changed')
-    // clearTimeout(timeoutId1);
-    // timeoutId1 = setTimeout(checkproject, 500);
+        function scanDirectory() {
+            var dirPath = document.getElementById('dirPath').value;
+            let tempcount = 0;
+            const dirButton = document.getElementById('scanBtn');
+            dirButton.innerText = 'Scanning...';
+            var eventSource1 = new EventSource('http://localhost:3333/api/scandata');
+            eventSource1.onmessage = function (event) {
+                var data = JSON.parse(event.data);
+                tempcount = data.filescount;
+                document.getElementById('scanLive').innerHTML = '<p>' + "We have scanned " + data.filescount + " Files " + "and " + data.folderscount + " Directory and Subdirectory" + '</p>';
+            };
 
-    // }
+            // Event handler for handling errors
+            eventSource1.onerror = function (error) {
+                console.error('EventSource error:', error);
+                // Close the connection
+                document.getElementById('scanLive').innerHTML = '<p>OOPS Scanning might be in process but failed to received number of files scanned.</p>';
+                eventSource1.close();
+            };
 
-    function checkproject(){
-      var projectPath = document.getElementById('projectPath').value;
-     
-      axios.get("/api/projectexists", {
-        params: { projectPath: projectPath }
-      })
-      .then((res)=>{
-        console.log(res.data)
-        
-        if(res.data.ans==='true'){
-         // console.log('inside true statement')
-          var element = document.getElementById("projectPath");
-          element.classList.add("error");
-          var spanele = document.getElementById("projectSpan");
-          spanele.style.display = "block";
-         
-        }
-        else if(res.data.ans==='false'){
-          var element = document.getElementById("projectPath");
-          element.classList.remove("error");
-          var spanele = document.getElementById("projectSpan");
-          spanele.style.display = "none";
-        }
-      
-      })
-      .catch((e)=>{
-        console.log(e)
-      })
+            //second event listener for indexing
+            var tempindexcount = 0;
+            var eventSource2 = new EventSource('http://localhost:3333/api/indexdata');
+            eventSource2.onmessage = function (eventval) {
+                clearTimeout(closeSource2);
+                var data1 = JSON.parse(eventval.data);
+                console.log('Received data:', data1.indexdataval);
+                tempindexcount = parseInt(data1.indexdataval, 10);
 
-    }
+                if (tempindexcount > tempcount) {
+                    document.getElementById('indexLive').innerHTML = '<p>'+'</p>';
+                }
+                else if (tempindexcount !== 0 && !isNaN(tempindexcount) && tempcount > tempindexcount) {
+                    console.log("Inside tempindex count and value is ", tempindexcount);
+                    document.getElementById('indexLive').innerHTML = '<p>' + "We have indexed " + tempindexcount + " documents" + '</p>';
+                }
+                else if (tempcount === tempindexcount) {
+                    document.getElementById('indexLive').innerHTML = '<p>' + "We have indexed " + tempindexcount + " documents" + '</p>';
+                    setTimeout(closeSource2, 5000);
+                }
+            };
 
+            eventSource2.onerror = function (error) {
+                console.error('EventSource error:', error);
+                // Close the connection
+                if (tempindexcount === tempcount) {
+                    document.getElementById('indexLive').innerHTML = '<p>' + "We have indexed " + tempindexcount + " documents" + '</p>';
+                    setTimeout(closeSource2, 5000);
+                }
+                else {
+                    document.getElementById('indexLive').innerHTML = '<p>OOPS Scanning might be in process but failed to received number of files scanned.</p>';
+                    setTimeout(closeSource2, 10000);
+                }
+            };
 
-
-
-    function scanDirectory() {
-      var dirPath = document.getElementById('dirPath').value;
-      // var indexPath = document.getElementById('projectPath').value;
-      let tempcount = 0;
-      const dirButton = document.getElementById('scanBtn');
-      dirButton.innerText = 'Scanning...';
-
-
-      var eventSource1 = new EventSource('http://localhost:3333/api/scandata');
-
-      eventSource1.onmessage = function(event) {
-        var data = JSON.parse(event.data);
-        tempcount = data.filescount;
-        document.getElementById('scanLive').innerHTML= '<p>' +"We have scanned "+ data.filescount + " Files "+ "and " +data.folderscount+" Directory and Subdirectory"+'</p>';
-      };
-
-      // Event handler for handling errors
-      eventSource1.onerror = function(error) {
-        console.error('EventSource error:', error);
-       // Close the connection
-        document.getElementById('scanLive').innerHTML = '<p>OOPS Scanning might be in process but failed to received number of files scanned.</p>';
-        eventSource1.close(); 
-
-      };
-
-
-          //second event listener for indexing
-          let tempindexcount = 0;
-          var eventSource2 = new EventSource('http://localhost:3333/api/indexdata');
-          eventSource2.onmessage = function(eventval) {
-           // console.log(event,'event');
-            clearTimeout(closeSource2);
-            //setTimeout(closeSource2,10000);
-            var data1 = JSON.parse(eventval.data);
-            console.log('Received data:', data1.indexcount);
-            try{
-              tempindexcount = Math.max(tempindexcount,data1.indexcount)
+            const closeSource2 = () => {
+                eventSource2.close();
             }
-            catch(e){
-              console.log('indexingdata api call. Something went wrong')
-            }
-          
 
-           if(tempcount !==0 && tempcount>tempindexcount && tempindexcount!==0){
-            document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + tempindexcount+ " documents"+'</p>';
-           }
-           else if(tempcount===tempindexcount){
-              document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + tempindexcount+ " documents"+'</p>';
-              setTimeout(closeSource2, 5000);
-            }
-          
-          };
-
-          eventSource2.onerror = function(error) {
-            console.error('EventSource error:', error);
-          // Close the connection
-          if(tempindexcount===tempcount) {
-            document.getElementById('indexLive').innerHTML =  '<p>' +"We have indexed " + tempindexcount+ " documents"+'</p>';
-            setTimeout(closeSource2, 5000);
-          }
-          else{
-            document.getElementById('indexLive').innerHTML = '<p>OOPS Scanning might be in process but failed to received number of files scanned.</p>';
-            setTimeout(closeSource2, 10000);
-         }
-           
-            
-          };
-
-          const closeSource2 = ()=>{
-            eventSource2.close();
-          }
-
-      axios.get('http://localhost:3333/api/scanDir', {
-        params: { dirPath: dirPath,
-        // indexPath: indexPath
+            axios.get('http://localhost:3333/api/scanDir', {
+                params: {
+                    dirPath: dirPath,
+                }
+            })
+                .then(function (response) {
+                    let tempcount = response.data.doccount;
+                    if (tempindexcount < tempcount && tempcount !== 0 && tempcount !== undefined && tempcount !== null) {
+                        tempindexcount = tempcount;
+                        document.getElementById('indexLive').innerHTML = '<p>' + "We have indexed " + tempindexcount + " documents" + '</p>';
+                    }
+                    dirButton.innerText = 'Scanning Done';
+                    document.getElementById('scanResult').innerHTML = '<pre>' + `${response.data.message} and ${response.data.doccount} Document indexed` + '</pre>';
+                })
+                .catch(function (error) {
+                    console.log(error)
+                    document.getElementById('scanResult').innerHTML = '<p>An error occurred while scanning the directory.</p>';
+                });
         }
-      })
-      .then(function(response) {
-        let tempcount = response.data.doccount;
-        if(tempindexcount<tempcount && tempcount!==0 && tempcount!==undefined && tempcount!==null) {
-          tempindexcount = tempcount;
-          document.getElementById('indexLive').innerHTML= '<p>' +"We have indexed " + tempindexcount+ " documents"+'</p>';
-        }
-        dirButton.innerText = 'Scanning Done';
-        document.getElementById('scanResult').innerHTML = '<pre>' + `${response.data.message} and ${response.data.doccount} Document indexed` + '</pre>';
-        // setTimeout(function() {
-        //  eventSource1.close();
-        //   }, 2000);
-          
-          //added second event listener 
-      
 
-      })
-      .catch(function(error) {
-        console.log(error)
-        document.getElementById('scanResult').innerHTML = '<p>An error occurred while scanning the directory.</p>';
-      });
-    }
+        document.getElementById('directoryScannerForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const dirPath = document.getElementById('dirPath').value;
+            const scanBtn = document.getElementById('scanBtn');
 
-
-    document.getElementById('directoryScannerForm').addEventListener('submit', function(event) {
-      event.preventDefault();
-      const dirPath = document.getElementById('dirPath').value;
-      const scanBtn = document.getElementById('scanBtn');
-      const indexBtn = document.getElementById('indexBtn');
-
-      if (event.target === scanBtn) {
-        scanDirectory(dirPath);
-      } else if (event.target === indexBtn) {
-        indexOpensearch(dirPath);
-      }
-    });
-  </script>
+            if (event.target === scanBtn) {
+                scanDirectory(dirPath);
+            }
+        });
+    </script>
 </body>
 </html>

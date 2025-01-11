@@ -21,7 +21,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
             logger.info(`Scanning ${currentPath}`);
             const files = fs.readdirSync(currentPath);
             await Promise.all(
-                files.map(async function(file) {
+                files.map(async function (file) {
                     // console.log(file,'file');
                     let filePath = path.join(currentPath, file);
                     let stats = fs.statSync(filePath);
@@ -74,14 +74,22 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                 // Extract the title
                                 let title = $("title")
                                     .text()
-                                    .replace(/[\n\/\\><-]+|\s+/g, " ");
+                                    .replace(/[\n\/\\><-]+/g, " ") // Replace unwanted characters with a single space
+                                    .replace(/\s+/g, " ")          // Normalize multiple spaces into a single space
+                                    .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
+                                    .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
+                                    .trim();                        // Remove leading/trailing spaces
                                 if (title === undefined || title == null || title == "") {
                                     title = "";
                                 }
 
                                 const text = convert(html, options);
-                                let cleanedText = text.replace(/[\n\/\\><-]+|\s+/g, " ");
-
+                                let cleanedText = text.replace(/[\n\/\\><-]+/g, " ") // Replace unwanted characters with a single space
+                                    .replace(/\s+/g, " ")          // Normalize multiple spaces into a single space
+                                    .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
+                                    .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
+                                    .trim()                        // Remove leading/trailing spaces
+                                    .toLowerCase(); 
                                 //console.log(text);
                                 const data = new Data({
                                     id: id,
@@ -149,23 +157,27 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                         if (result.ImageDescription &&
                                             result.ImageDescription.description) {
                                             imageDescription =
-                                                result.ImageDescription.description.replace(
-                                                    /[\n\/\\><-]+|\s+/g,
-                                                    " "
-                                                );
+                                                result.ImageDescription.description.replace(/[\n\/\\><-]+/g, " ") // Replace unwanted characters with a single space
+                                                    .replace(/\s+/g, " ")          // Normalize multiple spaces into a single space
+                                                    .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
+                                                    .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
+                                                    .trim()                        // Remove leading/trailing spaces
+                                                    .toLowerCase(); 
                                         }
 
                                         if (result.title && result.title.description) {
-                                            imgtitle = result.title.description.replace(
-                                                /[\n\/\\><-]+|\s+/g,
-                                                " "
-                                            );
+                                            imgtitle = result.title.description.replace(/[\n\/\\><-]+/g, " ") // Replace unwanted characters with a single space
+                                                .replace(/\s+/g, " ")          // Normalize multiple spaces into a single space
+                                                .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
+                                                .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
+                                                .trim();                        // Remove leading/trailing spaces
                                         }
                                         if (result.subject && result.title.description) {
-                                            imgtags = result.subject.description.replace(
-                                                /[\n\/\\><-]+|\s+/g,
-                                                " "
-                                            );
+                                            imgtags = result.subject.description.replace(/[\n\/\\><-]+/g, " ") // Replace unwanted characters with a single space
+                                                .replace(/\s+/g, " ")          // Normalize multiple spaces into a single space
+                                                .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
+                                                .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
+                                                .trim();                        // Remove leading/trailing spaces
                                         }
                                     }
 
@@ -234,23 +246,27 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                         if (result.ImageDescription &&
                                             result.ImageDescription.description) {
                                             imageDescription =
-                                                result.ImageDescription.description.replace(
-                                                    /[\n\/\\><-]+|\s+/g,
-                                                    " "
-                                                );
+                                                result.ImageDescription.description.replace(/[\n\/\\><-]+/g, " ") // Replace unwanted characters with a single space
+                                                    .replace(/\s+/g, " ")          // Normalize multiple spaces into a single space
+                                                    .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
+                                                    .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
+                                                    .trim()                        // Remove leading/trailing spaces
+                                                    .toLowerCase(); 
                                         }
 
                                         if (result.title && result.title.description) {
-                                            imgtitle = result.title.description.replace(
-                                                /[\n\/\\><-]+|\s+/g,
-                                                " "
-                                            );
+                                            imgtitle = result.title.description.replace(/[\n\/\\><-]+/g, " ") // Replace unwanted characters with a single space
+                                                .replace(/\s+/g, " ")          // Normalize multiple spaces into a single space
+                                                .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
+                                                .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
+                                                .trim();                        // Remove leading/trailing spaces
                                         }
                                         if (result.subject && result.title.description) {
-                                            imgtags = result.subject.description.replace(
-                                                /[\n\/\\><-]+|\s+/g,
-                                                " "
-                                            );
+                                            imgtags = result.subject.description.replace(/[\n\/\\><-]+/g, " ") // Replace unwanted characters with a single space
+                                                .replace(/\s+/g, " ")          // Normalize multiple spaces into a single space
+                                                .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
+                                                .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
+                                                .trim();                        // Remove leading/trailing spaces
                                         }
                                     }
                                 } else if (filetype === "image/gif") {
@@ -270,23 +286,27 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                         if (result.ImageDescription &&
                                             result.ImageDescription.description) {
                                             imageDescription =
-                                                result.ImageDescription.description.replace(
-                                                    /[\n\/\\><-]+|\s+/g,
-                                                    " "
-                                                );
+                                                result.ImageDescription.description.replace(/[\n\/\\><-]+/g, " ") // Replace unwanted characters with a single space
+                                                    .replace(/\s+/g, " ")          // Normalize multiple spaces into a single space
+                                                    .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
+                                                    .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
+                                                    .trim()                        // Remove leading/trailing spaces
+                                                    .toLowerCase(); 
                                         }
 
                                         if (result.title && result.title.description) {
-                                            imgtitle = result.title.description.replace(
-                                                /[\n\/\\><-]+|\s+/g,
-                                                " "
-                                            );
+                                            imgtitle = result.title.description.replace(/[\n\/\\><-]+/g, " ") // Replace unwanted characters with a single space
+                                                .replace(/\s+/g, " ")          // Normalize multiple spaces into a single space
+                                                .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
+                                                .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
+                                                .trim();                        // Remove leading/trailing spaces
                                         }
                                         if (result.subject && result.title.description) {
-                                            imgtags = result.subject.description.replace(
-                                                /[\n\/\\><-]+|\s+/g,
-                                                " "
-                                            );
+                                            imgtags = result.subject.description.replace(/[\n\/\\><-]+/g, " ") // Replace unwanted characters with a single space
+                                                .replace(/\s+/g, " ")          // Normalize multiple spaces into a single space
+                                                .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
+                                                .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
+                                                .trim();                        // Remove leading/trailing spaces
                                         }
                                     }
                                 }
@@ -458,7 +478,12 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                 const data = await pdf(dataBuffer);
                                 let title = "";
                                 const titletemp = data.info.Title;
-                                let cleanedData = data.text.replace(/[\n\/\\><-]+|\s+/g, " ");
+                                let cleanedData = data.text.replace(/[\n\/\\><-]+/g, " ") // Replace unwanted characters with a single space
+                                    .replace(/\s+/g, " ")          // Normalize multiple spaces into a single space
+                                    .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
+                                    .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
+                                    .trim()                        // Remove leading/trailing spaces
+                                    .toLowerCase(); 
                                 if (titletemp && titletemp !== "Untitled") {
                                     title = titletemp;
                                 } else {
@@ -508,14 +533,19 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                             }
                         } else if (filetype === "text/plain") {
                             if (filetype === "text/plain") {
-                                fs.readFile(filePath, "utf8", function(err, data) {
+                                fs.readFile(filePath, "utf8", function (err, data) {
                                     if (err) {
                                         logger.error(`Failed to read file data ${filePath}`);
                                         const jsonError = JSON.stringify(err);
                                         logger.debug(jsonError);
                                     } else {
                                         try {
-                                            let cleanedData = data.replace(/[\n\/\\><-]+|\s+/g, " ");
+                                            let cleanedData = data.replace(/[\n\/\\><-]+/g, " ") // Replace unwanted characters with a single space
+                                                .replace(/\s+/g, " ")          // Normalize multiple spaces into a single space
+                                                .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
+                                                .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
+                                                .trim()                        // Remove leading/trailing spaces
+                                                .toLowerCase(); 
                                             let title = cleanedData.substring(0, 30);
 
                                             const dataval = new Data({
@@ -567,7 +597,12 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                 await extracted.then(async (doc) => {
                                     let cleanedData = doc
                                         .getBody()
-                                        .replace(/[\n\/\\><-]+|\s+/g, " ");
+                                        .replace(/[\n\/\\><-]+/g, " ") // Replace unwanted characters with a single space
+                                        .replace(/\s+/g, " ")          // Normalize multiple spaces into a single space
+                                        .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
+                                        .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
+                                        .trim()                        // Remove leading/trailing spaces
+                                        .toLowerCase(); 
                                     let title = cleanedData.substring(0, 30);
 
                                     const data = new Data({

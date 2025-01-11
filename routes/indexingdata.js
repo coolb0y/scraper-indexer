@@ -18,7 +18,7 @@ router.get('/', (req, res) => {
 
     // Close the server-sent event connection on client request
     req.on('close', () => {
-
+        indexdataval = 0;
         clearInterval(dataInterval);
         res.end();
     });

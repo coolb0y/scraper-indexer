@@ -1,6 +1,5 @@
 ﻿const fs = require("fs-extra");
 const path = require("path");
-const { v4: uuidv4 } = require("uuid");
 
 function checkThumbnailExists(filePath) {
     // Get the directory and file name
