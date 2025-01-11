@@ -28,9 +28,13 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                     if (stats.isDirectory()) {
                         logger.debug(`${filePath} found`);
                         scandataval.nofolders = scandataval.nofolders + 1;
-
-                        stack.push(filePath);
-                        logger.debug(`${filePath} is added to queue`);
+                        
+                        if (!filePath.endsWith('chipsterthumbs')) {
+                            stack.push(filePath);
+                            logger.debug(`${filePath} is added to queue`);
+                        } else {
+                            logger.debug(`${filePath} ends with 'chipsterthumbs', skipping...`);
+                        }
                     } else {
                         // Handle file here
                         let fileName = file;

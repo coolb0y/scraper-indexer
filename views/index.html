@@ -169,7 +169,7 @@
                     console.log("Inside tempindex count and value is ", tempindexcount);
                     document.getElementById('indexLive').innerHTML = '<p>' + "We have indexed " + tempindexcount + " documents" + '</p>';
                 }
-                else if (tempcount === tempindexcount) {
+                else if (tempindexcount !== 0 && tempcount !== 0 && tempcount === tempindexcount) {
                     document.getElementById('indexLive').innerHTML = '<p>' + "We have indexed " + tempindexcount + " documents" + '</p>';
                     setTimeout(closeSource2, 5000);
                 }
@@ -178,9 +178,12 @@
             eventSource2.onerror = function (error) {
                 console.error('EventSource error:', error);
                 // Close the connection
-                if (tempindexcount === tempcount) {
+                if (tempindexcount === tempcount && tempindexcount !== 0 ) {
                     document.getElementById('indexLive').innerHTML = '<p>' + "We have indexed " + tempindexcount + " documents" + '</p>';
                     setTimeout(closeSource2, 5000);
+                }
+                else if (tempindexcount === 0) {
+                    document.getElementById('indexLive').innerHTML = '<p>' + '</p>';
                 }
                 else {
                     document.getElementById('indexLive').innerHTML = '<p>OOPS Scanning might be in process but failed to received number of files scanned.</p>';
