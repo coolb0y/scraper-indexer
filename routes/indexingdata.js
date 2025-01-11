@@ -12,8 +12,9 @@ router.get('/', (req, res) => {
     // Send a sample event every second
     const dataInterval = setInterval(() => {
 
-        res.write(`data: ${JSON.stringify({ indexdataval })}\n\n`);
-
+        if (indexdataval > 0) {
+            res.write(`data: ${JSON.stringify({ indexdataval })}\n\n`);
+        }
     }, 50);
 
     // Close the server-sent event connection on client request

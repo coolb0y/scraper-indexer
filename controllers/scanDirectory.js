@@ -12,7 +12,7 @@ const logger = require("../helper/loggerProject");
 const { findVideoInfo } = require("../helper/findVideoInfo");
 const { checkThumbnailExists } = require("../helper/checkThumbnailExists");
 const { options } = require("../config/options");
-
+const { getFileExtension } = require("../helper/getfileExtension");
 async function scanDirectory(dirPath, lastdirname, dirlength) {
     const stack = [dirPath];
     while (stack.length) {
@@ -58,7 +58,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                             .replace(/\\/g, "/");
 
                         let url = baseurl + pathAfterDomain;
-
+                        let fileExtension = "Unknown";
                         try {
                             filetype = mime.lookup(filePath);
                             logger.debug(`We have figured filetype as: ${filetype}`);
@@ -68,6 +68,13 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                             );
                             const jsonError = JSON.stringify(err);
                             logger.debug(`The below error took place" :- ${jsonError}`);
+                        }
+
+                        try {
+                            fileExtension = getFileExtension(filePath);
+                        }
+                        catch {
+                            logger.error("Failed to get file extension. Scanning will progress");
                         }
 
                         if (filetype === "text/html") {
@@ -104,6 +111,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                     url: url,
                                     filedetails: cleanedText,
                                     baseurl: baseurl,
+                                    fileextension: fileExtension,
                                 });
 
                                 try {
@@ -197,6 +205,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                         width: imageWidth,
                                         imgtags: imgtags,
                                         baseurl: baseurl,
+                                        fileextension: fileExtension
                                     });
 
                                     try {
@@ -327,6 +336,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                     width: imageWidth,
                                     imgtags: imgtags,
                                     baseurl: baseurl,
+                                    fileextension: fileExtension
                                 });
 
                                 try {
@@ -448,6 +458,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                             width: width,
                                             thumbnailPath: thumbnailFilePath,
                                             baseurl: baseurlvideo,
+                                            fileextension: fileExtension
                                         });
 
                                         try {
@@ -513,6 +524,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                     url: url,
                                     filedetails: cleanedData,
                                     baseurl: baseurl,
+                                    fileextension: fileExtension
                                 });
 
                                 try {
@@ -561,6 +573,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                                 url: url,
                                                 filedetails: cleanedData,
                                                 baseurl: baseurl,
+                                                fileextension: fileExtension
                                             });
 
                                             dataval
@@ -618,6 +631,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                         url: url,
                                         filedetails: cleanedData,
                                         baseurl: baseurl,
+                                        fileextension: fileExtension
                                     });
 
                                     try {

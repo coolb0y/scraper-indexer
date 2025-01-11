@@ -17,7 +17,8 @@ const dataSchema = mongoose.Schema({
         length:{ type: Number },
         width:{ type: Number },
         imgtags:{ type: String },
-        baseurl:{ type: String},
+        baseurl: { type: String },
+        fileextension: { type: String }
 });
 dataSchema.index({url: 1 }, { unique: true });
 
