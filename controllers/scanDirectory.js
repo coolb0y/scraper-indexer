@@ -14,7 +14,7 @@ const { checkThumbnailExists } = require("../helper/checkThumbnailExists");
 const { options } = require("../config/options");
 const { getFileExtension } = require("../helper/getfileExtension");
 const { extractSvgInfo } = require("../helper/svgInfoExtractor");
-
+const officeInfoExtractor  = require("../helper/officeFileInfoExtractor");
 
 async function scanDirectory(dirPath, lastdirname, dirlength) {
     const stack = [dirPath];
@@ -139,15 +139,15 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                             }
                         }
                         else if (filetype === "image/svg+xml") {
-                           
+
                             extractSvgInfo(filePath)
-                                .then( async (info) => {
-                                    
-                                    let imgtitle = info ? info.title : "";
-                                    let imageDescription = info ? info.description : "";
+                                .then(async (info) => {
+
+                                    let imgtitle = info && info.title ? info.title : "";
+                                    let imageDescription = info && info.description ? info.description : "";
                                     let imageLength = info && info.dimensions ? Math.ceil(parseInt(info.dimensions.height), 10) : 0;
-                                    let imageWidth = info && info.dimensions ? Math.ceil(parseInt(info.dimensions.width), 10)  : 0;
-                                    let imgtags = info ? info.artist : "";
+                                    let imageWidth = info && info.dimensions ? Math.ceil(parseInt(info.dimensions.width), 10) : 0;
+                                    let imgtags = info && info.artist ? info.artist : "";
 
                                     const data = new Data({
                                         id: id,
@@ -184,6 +184,130 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                     logger.error('Error:', err.message);
                                 });
                         }
+                        if (
+                            filetype === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+                            filetype === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+                            filetype === "application/vnd.oasis.opendocument.presentation" ||
+                            filetype === "application/vnd.oasis.opendocument.spreadsheet"
+                        ) {
+                            // For pptx, xlsx, odp, ods files
+                            try {
+                                const data = await officeInfoExtractor(filePath);
+
+                                if (!data) {
+                                    throw new Error(`No data extracted from ${filePath}`);
+                                }
+
+                                // Clean up the data
+                                const cleanedData = data
+                                    .replace(/[\n\/\\><-]+/g, " ") // Replace unwanted characters with a space
+                                    .replace(/\s+/g, " ") // Normalize spaces
+                                    .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
+                                    .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
+                                    .trim() // Remove leading/trailing spaces
+                                    .toLowerCase();
+
+                                // Process the title
+                                let title = data.split("\n");
+                                title = title.length >= 2 ? title[0] + " " + title[1] : title[0];
+
+                                title = title
+                                    .substring(0, 30) // Extract the first 30 characters
+                                    .replace(/[\n\/\\><-]+/g, " ") // Replace unwanted characters with a space
+                                    .replace(/\s+/g, " ") // Normalize spaces
+                                    .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
+                                    .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
+                                    .trim(); // Remove leading/trailing spaces
+
+                                // Prepare data to be saved
+                                const dataval = new Data({
+                                    id,
+                                    title,
+                                    filename: fileName,
+                                    filetype: "office document",
+                                    filesize,
+                                    url,
+                                    filedetails: cleanedData,
+                                    baseurl,
+                                    fileextension: fileExtension,
+                                });
+
+                                // Save the data to MongoDB
+                                try {
+                                    // console.log(data.filedetails)
+                                    await dataval.save();
+                                    scandataval.nofiles = scandataval.nofiles + 1;
+                                    doccount++;
+                                    logger.info(`${filePath} scanned and saved to database`);
+                                    logger.debug(`Number of Document scanned are ${doccount}`);
+                                } catch (e) {
+                                    // console.log(e);
+                                    logger.error(
+                                        `Failed to save data to database ${filePath}. Skipping file. Scanning will continue`
+                                    );
+                                    const jsonError = JSON.stringify(e);
+                                    logger.debug(`Error:- ${jsonError}`);
+                                }
+                            } catch (e) {
+                                logger.error(`Failed to process file ${filePath}.`);
+                                logger.debug(`Error: ${JSON.stringify(e)}`);
+                            }
+                        } else if (filetype === "application/vnd.oasis.opendocument.text") {
+                            // For ODT files
+                            try {
+                                const data = await officeInfoExtractor(filePath);
+
+                                if (!data) {
+                                    throw new Error(`No data extracted from ${filePath}`);
+                                }
+
+                                // Clean up the data
+                                const cleanedData = data
+                                    .replace(/[\n\/\\><-]+/g, " ") // Replace unwanted characters with a space
+                                    .replace(/\s+/g, " ") // Normalize spaces
+                                    .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
+                                    .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
+                                    .trim() // Remove leading/trailing spaces
+                                    .toLowerCase();
+
+                                // Process the title
+                                const title = cleanedData.substring(0, 30); // Extract the first 30 characters
+
+                                // Prepare data to be saved
+                                const dataval = new Data({
+                                    id,
+                                    title,
+                                    filename: fileName,
+                                    filetype: "office document",
+                                    filesize,
+                                    url,
+                                    filedetails: cleanedData,
+                                    baseurl,
+                                    fileextension: fileExtension,
+                                });
+
+                                // Save the data to MongoDB
+                                try {
+                                    // console.log(data.filedetails)
+                                    await dataval.save();
+                                    scandataval.nofiles = scandataval.nofiles + 1;
+                                    doccount++;
+                                    logger.info(`${filePath} scanned and saved to database`);
+                                    logger.debug(`Number of Document scanned are ${doccount}`);
+                                } catch (e) {
+                                    // console.log(e);
+                                    logger.error(
+                                        `Failed to save data to database ${filePath}. Skipping file. Scanning will continue`
+                                    );
+                                    const jsonError = JSON.stringify(e);
+                                    logger.debug(`Error:- ${jsonError}`);
+                                }
+                            } catch (e) {
+                                logger.error(`Failed to process file ${filePath}.`);
+                                logger.debug(`Error: ${JSON.stringify(e)}`);
+                            }
+                        }
+
                         else if (filetype === "image/jpeg" ||
                             filetype === "image/png" ||
                             filetype === "image/jpg" ||
@@ -675,7 +799,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                         id: id,
                                         title: title,
                                         filename: fileName,
-                                        filetype: "doc-docx",
+                                        filetype: "office document",
                                         filesize: filesize,
                                         url: url,
                                         filedetails: cleanedData,
