@@ -139,15 +139,16 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                             }
                         }
                         else if (filetype === "image/svg+xml") {
-                            logger.error(filePath,"filepath xml svg")
+                           
                             extractSvgInfo(filePath)
                                 .then( async (info) => {
                                     
                                     let imgtitle = info ? info.title : "";
                                     let imageDescription = info ? info.description : "";
-                                    let imageLength = info ? Math.ceil(info.dimensions.height) : 0;
-                                    let imageWidth = info ? Math.ceil(info.dimensions.width) : 0;
+                                    let imageLength = info && info.dimensions ? Math.ceil(parseInt(info.dimensions.height), 10) : 0;
+                                    let imageWidth = info && info.dimensions ? Math.ceil(parseInt(info.dimensions.width), 10)  : 0;
                                     let imgtags = info ? info.artist : "";
+
                                     const data = new Data({
                                         id: id,
                                         title: imgtitle,
