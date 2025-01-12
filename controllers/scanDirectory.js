@@ -13,6 +13,9 @@ const { findVideoInfo } = require("../helper/findVideoInfo");
 const { checkThumbnailExists } = require("../helper/checkThumbnailExists");
 const { options } = require("../config/options");
 const { getFileExtension } = require("../helper/getfileExtension");
+const { extractSvgInfo } = require("../helper/svgInfoExtractor");
+
+
 async function scanDirectory(dirPath, lastdirname, dirlength) {
     const stack = [dirPath];
     while (stack.length) {
@@ -28,7 +31,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                     if (stats.isDirectory()) {
                         logger.debug(`${filePath} found`);
                         scandataval.nofolders = scandataval.nofolders + 1;
-                        
+
                         if (!filePath.endsWith('chipsterthumbs')) {
                             stack.push(filePath);
                             logger.debug(`${filePath} is added to queue`);
@@ -100,7 +103,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                     .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
                                     .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
                                     .trim()                        // Remove leading/trailing spaces
-                                    .toLowerCase(); 
+                                    .toLowerCase();
                                 //console.log(text);
                                 const data = new Data({
                                     id: id,
@@ -134,6 +137,51 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                 const jsonError = JSON.stringify(err);
                                 logger.debug(jsonError);
                             }
+                        }
+                        else if (filetype === "image/svg+xml") {
+                            logger.error(filePath,"filepath xml svg")
+                            extractSvgInfo(filePath)
+                                .then( async (info) => {
+                                    
+                                    let imgtitle = info ? info.title : "";
+                                    let imageDescription = info ? info.description : "";
+                                    let imageLength = info ? Math.ceil(info.dimensions.height) : 0;
+                                    let imageWidth = info ? Math.ceil(info.dimensions.width) : 0;
+                                    let imgtags = info ? info.artist : "";
+                                    const data = new Data({
+                                        id: id,
+                                        title: imgtitle,
+                                        filename: fileName,
+                                        filetype: "image",
+                                        filesize: filesize,
+                                        url: url,
+                                        filedetails: imageDescription,
+                                        length: imageLength,
+                                        width: imageWidth,
+                                        imgtags: imgtags,
+                                        baseurl: baseurl,
+                                        fileextension: fileExtension
+                                    });
+
+                                    try {
+                                        // console.log(data.filedetails)
+                                        await data.save();
+                                        scandataval.nofiles = scandataval.nofiles + 1;
+                                        doccount++;
+                                        logger.info(`${filePath} scanned and saved to database`);
+                                        logger.debug(`Number of Document scanned are ${doccount}`);
+                                    } catch (e) {
+                                        // console.log(e);
+                                        logger.error(
+                                            `Failed to save data to database ${filePath}. Skipping file. Scanning will continue`
+                                        );
+                                        const jsonError = JSON.stringify(e);
+                                        logger.debug(`Error:- ${jsonError}`);
+                                    }
+                                })
+                                .catch((err) => {
+                                    logger.error('Error:', err.message);
+                                });
                         }
                         else if (filetype === "image/jpeg" ||
                             filetype === "image/png" ||
@@ -174,7 +222,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                                     .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
                                                     .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
                                                     .trim()                        // Remove leading/trailing spaces
-                                                    .toLowerCase(); 
+                                                    .toLowerCase();
                                         }
 
                                         if (result.title && result.title.description) {
@@ -264,7 +312,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                                     .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
                                                     .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
                                                     .trim()                        // Remove leading/trailing spaces
-                                                    .toLowerCase(); 
+                                                    .toLowerCase();
                                         }
 
                                         if (result.title && result.title.description) {
@@ -304,7 +352,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                                     .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
                                                     .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
                                                     .trim()                        // Remove leading/trailing spaces
-                                                    .toLowerCase(); 
+                                                    .toLowerCase();
                                         }
 
                                         if (result.title && result.title.description) {
@@ -498,7 +546,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                     .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
                                     .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
                                     .trim()                        // Remove leading/trailing spaces
-                                    .toLowerCase(); 
+                                    .toLowerCase();
                                 if (titletemp && titletemp !== "Untitled") {
                                     title = titletemp;
                                 } else {
@@ -561,7 +609,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                                 .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
                                                 .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
                                                 .trim()                        // Remove leading/trailing spaces
-                                                .toLowerCase(); 
+                                                .toLowerCase();
                                             let title = cleanedData.substring(0, 30);
 
                                             const dataval = new Data({
@@ -619,7 +667,7 @@ async function scanDirectory(dirPath, lastdirname, dirlength) {
                                         .replace(/([a-zA-Z])(\d)/g, "$1 $2") // Add space between letters and digits
                                         .replace(/(\d)([a-zA-Z])/g, "$1 $2") // Add space between digits and letters
                                         .trim()                        // Remove leading/trailing spaces
-                                        .toLowerCase(); 
+                                        .toLowerCase();
                                     let title = cleanedData.substring(0, 30);
 
                                     const data = new Data({
