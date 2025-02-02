@@ -8,8 +8,8 @@ const xml2js = require('xml2js');
  */
 async function extractSvgInfo(filePath) {
     try {
-        // Read the SVG file
-        const svgContent = fs.readFileSync(filePath, 'utf-8');
+        // Read the SVG file asynchronously
+        const svgContent = await fs.promises.readFile(filePath, 'utf-8');
 
         // Parse the XML content
         const parser = new xml2js.Parser();
@@ -17,20 +17,42 @@ async function extractSvgInfo(filePath) {
 
         const svg = result.svg || {};
 
-        // Extract dimensions
-        const width = svg.$?.width || null;
-        const height = svg.$?.height || null;
-        const viewBox = svg.$?.viewBox || null;
+        // Helper function to safely extract string content from objects
+        const extractText = (field) => {
+            if (!field) return "";  // Return empty string if field is missing
+            return typeof field === "string" ? field : field._ || ""; // Extract text if it's an object
+        };
 
-        // Extract metadata
-        const metadata = svg.metadata || null;
+        // Extract and ensure dimensions are numbers
+        const parseDimension = (value) => {
+            if (!value) return null; // Return null if missing
+            const num = parseFloat(value);
+            return isNaN(num) ? null : num; // Convert to number, return null if invalid
+        };
 
-        // Extract title and description (if available)
-        const title = svg.title?.[0] || null;
-        const desc = svg.desc?.[0] || null;
+        let width = parseDimension(svg.$?.width); 
+        let height = parseDimension(svg.$?.height);
+        let viewBox = svg.$?.viewBox || "";
 
-        // Extract artist or creator information
-        const artist = metadata?.[0]?.creator || null;
+        // Use viewBox values as a fallback if width/height are missing
+        if (!width || !height) {
+            const viewBoxValues = viewBox.split(' ').map(parseFloat);
+            if (viewBoxValues.length === 4) {
+                const [, , viewBoxWidth, viewBoxHeight] = viewBoxValues;
+                width = width || viewBoxWidth;
+                height = height || viewBoxHeight;
+            }
+        }
+
+        // Ensure width and height have default values
+        width = width ?? 100;
+        height = height ?? 100;
+
+        // Extract metadata, title, and description safely
+        const metadata = svg.metadata || "";
+        const title = extractText(svg.title?.[0]);
+        const desc = extractText(svg.desc?.[0]);
+        const artist = metadata?.[0]?.creator ? extractText(metadata[0].creator) : "";
 
         return {
             dimensions: { width, height, viewBox },
