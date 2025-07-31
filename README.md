@@ -1,11 +1,9 @@
 
 
----
 
-```markdown
 # 📦 Scraper-Indexer
 
-A powerful Node.js-based utility to scrape, process, and index various file types including documents, HTML, images, audio, video, and more. Built to automate content ingestion and indexing pipelines with optional UI/API access.
+A powerful Node.js-based utility to scrape, process, and index various file types including documents, HTML, images, audio, video, and more. Built to automate content scraping and indexing into Opensearch with UI. This is a ready made free tool. 
 
 ## ✨ Features
 
@@ -22,7 +20,6 @@ A powerful Node.js-based utility to scrape, process, and index various file type
 ## 📁 Project Structure
 
 ```
-
 scraper-indexer/
 ├── controllers/          # Handles API or internal logic
 ├── models/               # Data schema or file structures
@@ -33,8 +30,7 @@ scraper-indexer/
 ├── scripts/              # Automation scripts (.bat)
 ├── server.js             # Main server entry point
 ├── package.json          # Project metadata and dependencies
-
-````
+```
 
 ## 🚀 Getting Started
 
@@ -43,7 +39,7 @@ scraper-indexer/
 ```bash
 git clone https://github.com/coolb0y/scraper-indexer.git
 cd scraper-indexer
-````
+```
 
 ### 2. Install Dependencies
 
@@ -65,10 +61,10 @@ start.bat
 
 By default, the server runs at: [http://localhost:3000](http://localhost:3000)
 
-## 🧪 Key Scripts
+## � Key Scripts
 
 | Script                | Description                                |
-| --------------------- | ------------------------------------------ |
+|-----------------------|--------------------------------------------|
 | `indexOpencopy.js`    | Indexes content from specified folders     |
 | `scanLinearcopy.js`   | Linearly scans and processes files         |
 | `createThumbnail.js`  | Generates thumbnails for images and videos |
@@ -118,9 +114,3 @@ Created by [coolb0y](https://github.com/coolb0y)
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-```
-
----
-
-Let me know if you want to generate a matching `LICENSE`, API reference, or `.env.example` file too.
-```
