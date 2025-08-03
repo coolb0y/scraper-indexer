@@ -11,6 +11,7 @@ const logger = require("./helper/loggerProject");
 const pathToFfmpeg = require("ffmpeg-static");
 const pathToFfprobe = require("ffprobe-static");
 const { scanDirectory } = require("./controllers/scanDirectory");
+const { transferDataToSQLite } = require('./helper/ingestFTS');
 path.join(__dirname, `./ffprobe.exe`);
 ffmpeg.setFfmpegPath(pathToFfmpeg);
 ffmpeg.setFfprobePath("./ffprobe.exe");
@@ -55,6 +56,15 @@ router.get("/", async (req, res) => {
             "Indexing done but Failed to copy folder to project path. Please do it manually",
         });
       }
+
+      transferDataToSQLite(projectname)
+      .then(() => {
+        console.log('✅ Indexing to SQLITE has Finished');
+       })
+      .catch((err) => {
+        console.error('❌ Indexing to SQLITE has Failed', err);
+      });
+
       logger.info("Scanning and Indexing is completed successfully");
       return res.status(200).json({
         message: "Directory scanned and Indexed documents Successful",
