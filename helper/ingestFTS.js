@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 const Data = require("../models/data");
+const logger = require("./loggerProject");
 
 const BATCH_SIZE = 1000;
 
@@ -41,12 +42,15 @@ async function processBatchOfDocuments(cursor, sqliteDb) {
     count++;
   }
 
-  console.log(`✅ Processed batch of ${count} documents`);
+  logger.info(`✅ Processed batch of ${count} documents`);
   return true;
 }
 
 async function transferDataToSQLite(projectname) {
-  const dbPath = path.join(process.cwd(), "..", "..", "Projects", projectname, "searchdatawithfts.db");
+  
+  const dbPath = path.join(process.cwd(), "..", "Projects", projectname, "searchdatawithfts.db");
+  logger.error(`Dbpath for sqlite is ${dbPath}`);
+  
   const sqliteDb = new sqlite3.Database(dbPath);
 
   await new Promise((res, rej) => {
